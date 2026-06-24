@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IA Agéntica — Guía Interactiva</title>
+<style>
+:root{
+  --bg:#0c0d12; --bg2:#13151d; --panel:#171a24; --panel2:#1d2130;
+  --line:#262b3a; --txt:#e7e9f0; --mut:#9aa1b4; --dim:#6b7286;
+  --acc:#7c8cff; --acc2:#56d4c0; --warn:#f0a14e; --pink:#e07ab5; --grn:#5fd07a;
+  --code:#0a0b10; --r:14px;
+  --mono:"SF Mono",ui-monospace,"Cascadia Code","JetBrains Mono",Menlo,monospace;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font-family:var(--sans);line-height:1.65;font-size:15.5px;-webkit-font-smoothing:antialiased}
+a{color:var(--acc);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Layout */
+.wrap{display:grid;grid-template-columns:260px 1fr;max-width:1380px;margin:0 auto;min-height:100vh}
+nav{position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--line);background:var(--bg2);padding:22px 16px}
+nav .brand{font-weight:800;font-size:17px;letter-spacing:-.3px;margin-bottom:4px}
+nav .brand span{color:var(--acc)}
+nav .sub{color:var(--dim);font-size:12px;margin-bottom:20px}
+nav a{display:block;color:var(--mut);padding:7px 11px;border-radius:9px;font-size:13.5px;margin-bottom:2px;border-left:2px solid transparent;transition:.15s}
+nav a:hover{background:var(--panel);color:var(--txt);text-decoration:none}
+nav a.active{background:var(--panel2);color:var(--txt);border-left-color:var(--acc)}
+nav .grp{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:1px;margin:18px 0 7px 11px;font-weight:700}
+
+main{padding:0 0 120px}
+.hero{padding:64px 56px 48px;border-bottom:1px solid var(--line);background:
+  radial-gradient(900px 380px at 12% -8%,rgba(124,140,255,.16),transparent 60%),
+  radial-gradient(700px 340px at 92% 0%,rgba(86,212,192,.12),transparent 55%)}
+.hero h1{font-size:42px;line-height:1.08;letter-spacing:-1.3px;font-weight:850;margin-bottom:16px}
+.hero h1 .g{background:linear-gradient(105deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--mut);font-size:17px;max-width:680px}
+.hero .pills{margin-top:26px;display:flex;gap:9px;flex-wrap:wrap}
+.pill{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:12.5px;color:var(--mut)}
+.pill b{color:var(--txt)}
+
+section{padding:52px 56px;border-bottom:1px solid var(--line);scroll-margin-top:0}
+.eyebrow{color:var(--acc);font-size:12.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:9px}
+.eyebrow .n{background:var(--acc);color:#0a0b10;width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:12px;font-weight:800}
+section h2{font-size:29px;letter-spacing:-.7px;font-weight:800;margin-bottom:14px}
+section h3{font-size:18.5px;margin:30px 0 12px;font-weight:700;letter-spacing:-.2px}
+section h4{font-size:15px;margin:20px 0 8px;font-weight:700;color:var(--txt)}
+section p{color:var(--mut);margin-bottom:14px;max-width:760px}
+section p b,li b{color:var(--txt);font-weight:650}
+em{color:var(--acc2);font-style:normal}
+
+.lead{font-size:17px;color:var(--txt)!important;max-width:780px}
+
+/* Cards / grid */
+.grid{display:grid;gap:16px;margin:22px 0}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.card .ic{font-size:22px;margin-bottom:9px}
+.card h4{margin:0 0 6px}
+.card p{font-size:13.5px;margin:0;color:var(--mut)}
+.card.hl{border-color:rgba(124,140,255,.4);background:linear-gradient(180deg,rgba(124,140,255,.08),var(--panel))}
+
+/* Code */
+pre{background:var(--code);border:1px solid var(--line);border-radius:11px;padding:16px 18px;overflow-x:auto;margin:16px 0;font-family:var(--mono);font-size:13px;line-height:1.7}
+code{font-family:var(--mono);font-size:.9em;background:var(--panel2);padding:1.5px 6px;border-radius:6px;color:var(--acc2)}
+pre code{background:none;padding:0;color:#cdd3e3}
+.c-key{color:var(--pink)} .c-str{color:var(--grn)} .c-com{color:var(--dim)} .c-fn{color:var(--acc)} .c-num{color:var(--warn)}
+
+/* Callout */
+.note{border-left:3px solid var(--acc);background:var(--panel);border-radius:0 11px 11px 0;padding:14px 18px;margin:18px 0}
+.note.warn{border-left-color:var(--warn)}
+.note.tip{border-left-color:var(--grn)}
+.note p{margin:0;font-size:14px}
+.note .lbl{font-weight:700;color:var(--txt);font-size:12px;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:4px}
+
+/* Table */
+.tbl{width:100%;border-collapse:collapse;margin:18px 0;font-size:13.5px;overflow:hidden;border-radius:11px;border:1px solid var(--line)}
+.tbl th{background:var(--panel2);text-align:left;padding:12px 14px;font-weight:700;color:var(--txt);border-bottom:1px solid var(--line);font-size:12.5px}
+.tbl td{padding:11px 14px;border-bottom:1px solid var(--line);color:var(--mut);vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(255,255,255,.018)}
+.tbl td b{color:var(--txt)}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;font-weight:600}
+.t-grn{background:rgba(95,208,122,.15);color:var(--grn)}
+.t-warn{background:rgba(240,161,78,.15);color:var(--warn)}
+.t-acc{background:rgba(124,140,255,.15);color:var(--acc)}
+.t-dim{background:var(--panel2);color:var(--dim)}
+
+/* Diagram: agentic loop */
+.loop{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin:26px 0;padding:26px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+.loop .node{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-align:center;min-width:118px}
+.loop .node .t{font-weight:700;font-size:13.5px}
+.loop .node .d{font-size:11px;color:var(--dim);margin-top:3px}
+.loop .arr{color:var(--acc);font-size:20px}
+.loop .node.s1{border-color:rgba(124,140,255,.5)}
+.loop .node.s2{border-color:rgba(86,212,192,.5)}
+.loop .node.s3{border-color:rgba(240,161,78,.5)}
+.loop .node.s4{border-color:rgba(224,122,181,.5)}
+
+/* Tabs */
+.tabs{margin:22px 0}
+.tabbtns{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:0}
+.tabbtns button{background:none;border:none;color:var(--mut);padding:10px 16px;font-size:13.5px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit;transition:.15s}
+.tabbtns button:hover{color:var(--txt)}
+.tabbtns button.active{color:var(--acc);border-bottom-color:var(--acc)}
+.tabpane{display:none;padding-top:20px;animation:fade .25s}
+.tabpane.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
+
+/* Stack diagram */
+.stack{margin:22px 0}
+.layer{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:14px 18px;margin-bottom:8px;position:relative;overflow:hidden}
+.layer::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--acc)}
+.layer .lname{font-weight:700;min-width:160px;font-size:14px}
+.layer .ldesc{color:var(--mut);font-size:13px}
+.layer.l2::before{background:var(--acc2)}
+.layer.l3::before{background:var(--warn)}
+.layer.l4::before{background:var(--pink)}
+.layer.l5::before{background:var(--grn)}
+
+/* MCP arch */
+.arch{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin:24px 0;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:26px}
+.arch .box{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px;text-align:center}
+.arch .box .bt{font-weight:700;font-size:14px;margin-bottom:4px}
+.arch .box .bd{font-size:11.5px;color:var(--dim)}
+.arch .conn{text-align:center;color:var(--acc);font-size:12px}
+.arch .conn .line{font-size:24px;line-height:1}
+
+.foot{padding:40px 56px;color:var(--dim);font-size:13px}
+.foot a{color:var(--mut)}
+
+.kbd{font-family:var(--mono);font-size:12px;background:var(--panel2);border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 7px;color:var(--txt)}
+
+ul.clean{list-style:none;margin:14px 0;max-width:780px}
+ul.clean li{padding:7px 0 7px 26px;position:relative;color:var(--mut);font-size:14px;border-bottom:1px solid var(--line)}
+ul.clean li:last-child{border-bottom:none}
+ul.clean li::before{content:"▸";position:absolute;left:4px;color:var(--acc)}
+ul.clean li b{color:var(--txt)}
+
+.toggle{cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px;padding:13px 16px;background:var(--panel);border:1px solid var(--line);border-radius:11px;margin-bottom:8px;font-weight:600;font-size:14px;transition:.15s}
+.toggle:hover{background:var(--panel2)}
+.toggle .chev{margin-left:auto;color:var(--acc);transition:.2s}
+.toggle.open .chev{transform:rotate(90deg)}
+.toggle-body{display:none;padding:4px 16px 18px;color:var(--mut);font-size:14px}
+.toggle-body.open{display:block}
+.toggle-body p{font-size:14px}
+
+@media(max-width:900px){
+  .wrap{grid-template-columns:1fr}
+  nav{display:none}
+  .hero{padding:42px 24px 34px}.hero h1{font-size:31px}
+  section{padding:38px 24px}
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .arch{grid-template-columns:1fr}
+  .layer{flex-direction:column;align-items:flex-start;gap:4px}
+}
+.progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--acc),var(--acc2));z-index:99;width:0}
+</style>
+</head>
+<body>
+<div class="progress" id="prog"></div>
+<div class="wrap">
+
+<!-- NAV -->
+<nav>
+  <div class="brand">IA <span>Agéntica</span></div>
+  <div class="sub">Guía técnica interactiva</div>
+  <div class="grp">Fundamentos</div>
+  <a href="#intro">¿Qué es un agente?</a>
+  <a href="#loop">El loop agéntico</a>
+  <a href="#anatomia">Anatomía de un agente</a>
+  <a href="#tools">Tools & function calling</a>
+  <a href="#context">Context engineering</a>
+  <div class="grp">Protocolos & extensión</div>
+  <a href="#mcp">MCP</a>
+  <a href="#skills">Skills</a>
+  <a href="#subagentes">Subagentes & multi-agente</a>
+  <div class="grp">Herramientas</div>
+  <a href="#claudecode">Claude Code</a>
+  <a href="#codex">Codex</a>
+  <a href="#opencode">OpenCode</a>
+  <a href="#comparativa">Comparativa</a>
+  <div class="grp">Práctica</div>
+  <a href="#patrones">Patrones agénticos</a>
+  <a href="#glosario">Glosario</a>
+</nav>
+
+<main>
+<header class="hero">
+  <h1>Entender el trabajo<br><span class="g">agéntico, subagéntico</span> e IA</h1>
+  <p>Una guía completa y técnica del ecosistema: cómo razonan los agentes, qué son MCP, Skills y subagentes, y cómo funcionan Claude Code, Codex y OpenCode bajo el capó.</p>
+  <div class="pills">
+    <span class="pill"><b>13</b> secciones</span>
+    <span class="pill"><b>Loop</b> agéntico</span>
+    <span class="pill"><b>MCP</b> · Skills · Subagentes</span>
+    <span class="pill">Claude Code · Codex · OpenCode</span>
+    <span class="pill">Actualizado <b>2026</b></span>
+  </div>
+</header>
+
+<!-- 1 INTRO -->
+<section id="intro">
+  <div class="eyebrow"><span class="n">1</span> Fundamentos</div>
+  <h2>¿Qué es un agente de IA?</h2>
+  <p class="lead">Un <b>agente</b> es un modelo de lenguaje (LLM) colocado dentro de un <em>bucle</em>: en lugar de responder una sola vez, recibe un objetivo, decide acciones, las ejecuta usando herramientas, observa el resultado y repite hasta cumplir la meta. La diferencia clave frente a un chatbot no es el modelo, sino la <b>autonomía sobre acciones</b>.</p>
+
+  <div class="grid g3">
+    <div class="card"><div class="ic">💬</div><h4>Chatbot</h4><p>Entrada → respuesta. Un turno. No actúa sobre el mundo; solo genera texto.</p></div>
+    <div class="card"><div class="ic">🔧</div><h4>LLM + tools</h4><p>Puede llamar funciones (buscar, calcular), pero tú orquestas cada paso.</p></div>
+    <div class="card hl"><div class="ic">🤖</div><h4>Agente</h4><p>Recibe un objetivo y decide <b>por sí mismo</b> qué herramientas usar, en qué orden y cuándo terminar.</p></div>
+  </div>
+
+  <h3>Las tres propiedades que definen "agéntico"</h3>
+  <ul class="clean">
+    <li><b>Autonomía dirigida a un objetivo</b> — opera sobre una meta de alto nivel ("arregla este bug"), no instrucciones paso a paso.</li>
+    <li><b>Uso de herramientas (tool use)</b> — puede ejecutar acciones reales: leer archivos, correr comandos, llamar APIs, escribir código.</li>
+    <li><b>Bucle iterativo con retroalimentación</b> — observa el resultado de cada acción y ajusta el plan. Es lo que permite recuperarse de errores.</li>
+  </ul>
+
+  <div class="note tip">
+    <span class="lbl">Idea central</span>
+    <p>El salto de "asistente" a "agente" es poner el LLM dentro de un <b>while loop</b> con acceso a herramientas y un criterio de parada. Casi todo lo demás —MCP, skills, subagentes— son formas de darle <em>mejores herramientas, más contexto o más manos</em>.</p>
+  </div>
+</section>
+
+<!-- 2 LOOP -->
+<section id="loop">
+  <div class="eyebrow"><span class="n">2</span> Fundamentos</div>
+  <h2>El loop agéntico</h2>
+  <p>Casi todos los agentes modernos implementan alguna variante del patrón <b>ReAct</b> (Reasoning + Acting): el modelo alterna entre <em>pensar</em> y <em>actuar</em>. Cada vuelta del bucle es un "turno del agente".</p>
+
+  <div class="loop">
+    <div class="node s1"><div class="t">🎯 Objetivo</div><div class="d">prompt + contexto</div></div>
+    <div class="arr">→</div>
+    <div class="node s2"><div class="t">🧠 Razonar</div><div class="d">planear acción</div></div>
+    <div class="arr">→</div>
+    <div class="node s3"><div class="t">⚙️ Actuar</div><div class="d">llamar tool</div></div>
+    <div class="arr">→</div>
+    <div class="node s4"><div class="t">👁️ Observar</div><div class="d">leer resultado</div></div>
+    <div class="arr">↺</div>
+    <div class="node s2"><div class="t">🧠 Re-evaluar</div><div class="d">¿terminé?</div></div>
+  </div>
+
+  <h3>Qué pasa en cada vuelta</h3>
+  <ul class="clean">
+    <li><b>1. Razonar</b> — el modelo recibe el historial completo (objetivo + resultados previos) y genera el próximo paso. A veces "piensa" en voz alta (chain-of-thought / extended thinking).</li>
+    <li><b>2. Actuar</b> — emite una <b>tool call</b>: una petición estructurada (JSON) para ejecutar una herramienta concreta con argumentos.</li>
+    <li><b>3. Observar</b> — el runtime (no el modelo) ejecuta la herramienta y devuelve el resultado al contexto como un nuevo mensaje.</li>
+    <li><b>4. Decidir</b> — con la nueva información, el modelo decide si hace otra acción o si ya tiene la respuesta final y detiene el bucle.</li>
+  </ul>
+
+  <pre><code><span class="c-com"># Pseudocódigo del bucle agéntico</span>
+mensajes = [system_prompt, objetivo_usuario]
+<span class="c-key">while</span> <span class="c-key">True</span>:
+    respuesta = <span class="c-fn">llm</span>(mensajes, tools=tools_disponibles)
+    mensajes.<span class="c-fn">append</span>(respuesta)
+
+    <span class="c-key">if</span> respuesta.tiene_tool_calls:
+        <span class="c-key">for</span> call <span class="c-key">in</span> respuesta.tool_calls:
+            resultado = <span class="c-fn">ejecutar</span>(call.nombre, call.args)   <span class="c-com"># el runtime actúa</span>
+            mensajes.<span class="c-fn">append</span>(tool_result(resultado))
+    <span class="c-key">else</span>:
+        <span class="c-key">return</span> respuesta.texto   <span class="c-com"># sin más acciones → terminado</span></code></pre>
+
+  <div class="note">
+    <span class="lbl">Por qué importa el bucle</span>
+    <p>La <b>recuperación de errores</b> emerge del bucle: si un comando falla, el modelo ve el mensaje de error en la siguiente vuelta y puede corregir. Sin bucle, un solo fallo arruina toda la tarea. Por eso los agentes pueden encadenar <em>cientos de llamadas</em> a herramientas sin intervención humana.</p>
+  </div>
+</section>
+
+<!-- 3 ANATOMIA -->
+<section id="anatomia">
+  <div class="eyebrow"><span class="n">3</span> Fundamentos</div>
+  <h2>Anatomía de un agente</h2>
+  <p>Todo agente, sin importar el proveedor, se compone de las mismas piezas. Entender estas capas te permite leer cualquier herramienta nueva y saber qué hace.</p>
+
+  <div class="stack">
+    <div class="layer"><div class="lname">🧠 Modelo (LLM)</div><div class="ldesc">El "cerebro". Razona, planea y decide acciones. Ej: Claude Opus, GPT-5.5, Gemini.</div></div>
+    <div class="layer l2"><div class="lname">📜 System prompt</div><div class="ldesc">Las instrucciones permanentes: rol, reglas, estilo, qué herramientas tiene y cómo usarlas.</div></div>
+    <div class="layer l3"><div class="lname">🪟 Context window</div><div class="ldesc">La memoria de trabajo. Todo lo que el modelo "ve" ahora: prompt, historial, resultados de tools, archivos. Es finita.</div></div>
+    <div class="layer l4"><div class="lname">⚙️ Tools</div><div class="ldesc">Las "manos": funciones que el modelo puede invocar (leer/escribir archivos, bash, web, APIs vía MCP).</div></div>
+    <div class="layer l5"><div class="lname">🔁 Orquestador / runtime</div><div class="ldesc">El código que corre el bucle, ejecuta las tools de verdad, gestiona memoria y aplica permisos.</div></div>
+  </div>
+
+  <h3>La pieza más incomprendida: la ventana de contexto</h3>
+  <p>El modelo no "recuerda" nada entre llamadas. En cada vuelta del bucle se le re-envía <b>todo</b> el contexto relevante. La ventana tiene un límite (p. ej. 200K tokens). Gestionar qué entra y qué sale de esa ventana —<em>context engineering</em>— es la habilidad central de construir buenos agentes.</p>
+
+  <div class="grid g4">
+    <div class="card"><div class="ic">🎯</div><h4>Tokens</h4><p>Unidad de texto. La ventana se mide en tokens, no en palabras (~0.75 palabras/token).</p></div>
+    <div class="card"><div class="ic">📉</div><h4>Context rot</h4><p>Cuanto más llena la ventana, peor razona el modelo. Menos es más.</p></div>
+    <div class="card"><div class="ic">🗜️</div><h4>Compactación</h4><p>Resumir el historial viejo para liberar espacio sin perder lo esencial.</p></div>
+    <div class="card"><div class="ic">📂</div><h4>Retrieval</h4><p>Traer solo el fragmento necesario (de archivos, docs, memoria) justo a tiempo.</p></div>
+  </div>
+</section>
+
+<!-- 4 TOOLS -->
+<section id="tools">
+  <div class="eyebrow"><span class="n">4</span> Fundamentos</div>
+  <h2>Tools & function calling</h2>
+  <p>Las <b>herramientas</b> son lo que convierte un modelo de texto en un agente que <em>actúa</em>. Técnicamente, una tool es una función con un nombre, una descripción y un esquema de parámetros (normalmente JSON Schema). El modelo no ejecuta la función: emite una petición para ejecutarla, y el runtime la corre.</p>
+
+  <h3>Cómo se le describe una tool al modelo</h3>
+  <pre><code>{
+  <span class="c-key">"name"</span>: <span class="c-str">"read_file"</span>,
+  <span class="c-key">"description"</span>: <span class="c-str">"Lee el contenido de un archivo del disco."</span>,
+  <span class="c-key">"input_schema"</span>: {
+    <span class="c-key">"type"</span>: <span class="c-str">"object"</span>,
+    <span class="c-key">"properties"</span>: {
+      <span class="c-key">"path"</span>: { <span class="c-key">"type"</span>: <span class="c-str">"string"</span>, <span class="c-key">"description"</span>: <span class="c-str">"Ruta absoluta"</span> }
+    },
+    <span class="c-key">"required"</span>: [<span class="c-str">"path"</span>]
+  }
+}</code></pre>
+
+  <div class="note tip">
+    <span class="lbl">Clave de diseño</span>
+    <p>La <b>descripción</b> de la tool es prompt engineering puro: el modelo decide cuándo usarla solo a partir de ese texto. Una buena descripción —clara, con cuándo usar y cuándo no— vale más que código perfecto. Esto es exactamente lo que hace que las <em>Skills</em> y los <em>MCP servers</em> funcionen.</p>
+  </div>
+
+  <h3>El ciclo de una tool call</h3>
+  <div class="loop">
+    <div class="node s1"><div class="t">Modelo decide</div><div class="d">"necesito leer X"</div></div>
+    <div class="arr">→</div>
+    <div class="node s2"><div class="t">Emite tool_call</div><div class="d">JSON con args</div></div>
+    <div class="arr">→</div>
+    <div class="node s3"><div class="t">Runtime ejecuta</div><div class="d">corre la función</div></div>
+    <div class="arr">→</div>
+    <div class="node s4"><div class="t">tool_result</div><div class="d">vuelve al contexto</div></div>
+  </div>
+
+  <h3>Tipos comunes de herramientas</h3>
+  <table class="tbl">
+    <tr><th>Categoría</th><th>Ejemplos</th><th>Riesgo</th></tr>
+    <tr><td><b>Lectura</b></td><td>read_file, grep, glob, web_fetch</td><td><span class="tag t-grn">bajo</span></td></tr>
+    <tr><td><b>Escritura</b></td><td>write_file, edit, str_replace</td><td><span class="tag t-warn">medio</span></td></tr>
+    <tr><td><b>Ejecución</b></td><td>bash, run_command, ejecutar tests</td><td><span class="tag t-warn">alto</span></td></tr>
+    <tr><td><b>Externas (MCP)</b></td><td>Slack, GitHub, Postgres, Jira</td><td><span class="tag t-warn">variable</span></td></tr>
+    <tr><td><b>Sub-agentes</b></td><td>Task / spawn agent</td><td><span class="tag t-acc">orquestación</span></td></tr>
+  </table>
+</section>
+
+<!-- 5 CONTEXT -->
+<section id="context">
+  <div class="eyebrow"><span class="n">5</span> Fundamentos</div>
+  <h2>Context engineering</h2>
+  <p>Si <em>prompt engineering</em> es escribir buenas instrucciones, <b>context engineering</b> es gestionar todo lo que entra en la ventana del modelo durante una tarea larga: instrucciones, archivos, resultados de tools, memoria e historial. Es la disciplina que separa a un agente que funciona de uno que se confunde.</p>
+
+  <h3>Las cuatro tácticas fundamentales</h3>
+  <div class="grid g2">
+    <div class="card"><div class="ic">✍️</div><h4>Write — escribir fuera</h4><p>Guardar info en archivos/memoria externa (un <code>scratchpad</code>, notas) en vez de mantenerlo todo en la ventana.</p></div>
+    <div class="card"><div class="ic">🎯</div><h4>Select — seleccionar</h4><p>Traer a la ventana solo lo relevante ahora (retrieval, RAG, leer el archivo correcto justo a tiempo).</p></div>
+    <div class="card"><div class="ic">🗜️</div><h4>Compress — comprimir</h4><p>Resumir el historial viejo o los resultados largos para liberar tokens sin perder lo esencial.</p></div>
+    <div class="card"><div class="ic">🧩</div><h4>Isolate — aislar</h4><p>Repartir el trabajo entre <b>subagentes</b>, cada uno con su propia ventana limpia y enfocada.</p></div>
+  </div>
+
+  <div class="note warn">
+    <span class="lbl">Context rot</span>
+    <p>Más contexto no es mejor. A medida que la ventana se llena, la atención del modelo se diluye y empieza a ignorar instrucciones o mezclar datos. Por eso el objetivo no es "meter todo", sino mantener la ventana <b>pequeña, relevante y limpia</b>. Esta es la razón técnica de existir de las Skills (carga progresiva) y los subagentes (ventanas separadas).</p>
+  </div>
+
+  <h3>Archivos de memoria persistente</h3>
+  <p>Como el modelo olvida entre sesiones, las herramientas usan archivos convencionales que se cargan al inicio: <code>CLAUDE.md</code> (Claude Code), <code>AGENTS.md</code> (Codex, OpenCode y estándar emergente), reglas de proyecto. Son la "memoria a largo plazo" del agente sobre tu proyecto: estilo de código, comandos, convenciones.</p>
+</section>
+
+<!-- 6 MCP -->
+<section id="mcp">
+  <div class="eyebrow"><span class="n">6</span> Protocolos</div>
+  <h2>MCP — Model Context Protocol</h2>
+  <p class="lead">MCP es un <b>estándar abierto</b> (creado por Anthropic, hoy adoptado por OpenAI, Google y la mayoría de herramientas) para conectar agentes con herramientas y datos externos. Su analogía habitual: <em>"el USB-C de la IA"</em> — un único conector estándar en vez de una integración a medida por cada app.</p>
+
+  <h3>El problema que resuelve</h3>
+  <p>Sin MCP, conectar M agentes con N herramientas requiere M×N integraciones a medida. Con MCP, cada herramienta expone <b>un servidor MCP</b> y cada agente habla <b>un cliente MCP</b>: M+N. Cualquier agente que hable MCP puede usar cualquier servidor MCP.</p>
+
+  <div class="arch">
+    <div class="box"><div class="bt">🤖 Host / Cliente</div><div class="bd">El agente: Claude Code, Codex, Cursor, OpenCode…</div></div>
+    <div class="conn"><div class="line">⇄</div><div>JSON-RPC<br>stdio / HTTP</div></div>
+    <div class="box"><div class="bt">🔌 Servidor MCP</div><div class="bd">Expone: GitHub, Slack, Postgres, Figma, tu API…</div></div>
+  </div>
+
+  <h3>Qué expone un servidor MCP</h3>
+  <ul class="clean">
+    <li><b>Tools</b> — funciones que el agente puede ejecutar (ej: <code>create_issue</code>, <code>query_db</code>). Es lo más usado.</li>
+    <li><b>Resources</b> — datos que el agente puede leer (archivos, registros, documentos), referenciados por URI.</li>
+    <li><b>Prompts</b> — plantillas de instrucciones reutilizables que el servidor ofrece al usuario.</li>
+  </ul>
+
+  <h3>Transportes</h3>
+  <table class="tbl">
+    <tr><th>Transporte</th><th>Cuándo</th><th>Ejemplo</th></tr>
+    <tr><td><b>stdio</b></td><td>Servidor local, mismo equipo</td><td>Un proceso local que lee tus archivos o tu base de datos</td></tr>
+    <tr><td><b>HTTP + SSE / streamable</b></td><td>Servidor remoto, en la nube</td><td>Un conector SaaS (Slack, Linear) alojado por el proveedor</td></tr>
+  </table>
+
+  <div class="tabs">
+    <div class="tabbtns">
+      <button class="active" data-tab="mcp1">Config (cliente)</button>
+      <button data-tab="mcp2">Servidor mínimo (Python)</button>
+      <button data-tab="mcp3">Flujo</button>
+    </div>
+    <div class="tabpane active" id="mcp1">
+      <p>Así se registra un servidor MCP en un cliente (formato típico estilo Claude Code / muchos hosts):</p>
+      <pre><code>{
+  <span class="c-key">"mcpServers"</span>: {
+    <span class="c-key">"github"</span>: {
+      <span class="c-key">"command"</span>: <span class="c-str">"npx"</span>,
+      <span class="c-key">"args"</span>: [<span class="c-str">"-y"</span>, <span class="c-str">"@modelcontextprotocol/server-github"</span>],
+      <span class="c-key">"env"</span>: { <span class="c-key">"GITHUB_TOKEN"</span>: <span class="c-str">"ghp_..."</span> }
+    }
+  }
+}</code></pre>
+    </div>
+    <div class="tabpane" id="mcp2">
+      <p>Un servidor MCP que expone una tool, con el SDK de Python (FastMCP):</p>
+      <pre><code><span class="c-key">from</span> mcp.server.fastmcp <span class="c-key">import</span> FastMCP
+
+mcp = <span class="c-fn">FastMCP</span>(<span class="c-str">"clima"</span>)
+
+<span class="c-fn">@mcp.tool()</span>
+<span class="c-key">def</span> <span class="c-fn">get_clima</span>(ciudad: str) -> str:
+    <span class="c-str">"""Devuelve el clima actual de una ciudad."""</span>
+    <span class="c-key">return</span> <span class="c-fn">consultar_api</span>(ciudad)
+
+mcp.<span class="c-fn">run</span>()  <span class="c-com"># expone la tool por stdio</span></code></pre>
+    </div>
+    <div class="tabpane" id="mcp3">
+      <ul class="clean">
+        <li><b>1.</b> Al arrancar, el cliente pregunta al servidor <code>tools/list</code> → recibe los esquemas.</li>
+        <li><b>2.</b> El cliente inyecta esas tools en el contexto del modelo.</li>
+        <li><b>3.</b> El modelo decide usar una → el cliente llama <code>tools/call</code> al servidor.</li>
+        <li><b>4.</b> El servidor ejecuta y devuelve el resultado → vuelve al contexto del modelo.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="note tip">
+    <span class="lbl">Por qué MCP lo cambió todo</span>
+    <p>Antes, cada empresa de IA construía su propio sistema de plugins incompatible. MCP estandarizó la capa de herramientas, así que un servidor MCP de Notion funciona igual en Claude Code, Codex o Cursor. Es la razón de que el ecosistema de agentes haya explotado tan rápido.</p>
+  </div>
+</section>
+
+<!-- 7 SKILLS -->
+<section id="skills">
+  <div class="eyebrow"><span class="n">7</span> Protocolos</div>
+  <h2>Skills (Agent Skills)</h2>
+  <p class="lead">Una <b>Skill</b> es una carpeta con instrucciones, scripts y recursos que enseña a un agente a hacer una tarea especializada. Si MCP da <em>herramientas nuevas</em>, una Skill da <em>conocimiento y procedimiento</em>: "cómo crear un PowerPoint con nuestra plantilla", "cómo revisar un PR según nuestras reglas".</p>
+
+  <h3>Estructura de una Skill</h3>
+  <pre><code>mi-skill/
+├── SKILL.md          <span class="c-com"># obligatorio: instrucciones + metadatos (YAML)</span>
+├── scripts/
+│   └── generar.py    <span class="c-com"># código que el agente puede ejecutar</span>
+├── reference/
+│   └── api.md        <span class="c-com"># docs que carga solo si las necesita</span>
+└── assets/
+    └── plantilla.pptx</code></pre>
+
+  <p>El <code>SKILL.md</code> empieza con un frontmatter que el agente lee al inicio:</p>
+  <pre><code><span class="c-com">---</span>
+<span class="c-key">name</span>: <span class="c-str">pptx</span>
+<span class="c-key">description</span>: <span class="c-str">Crear y editar presentaciones .pptx. Usar cuando el
+  usuario mencione slides, deck o presentación.</span>
+<span class="c-com">---</span>
+<span class="c-com"># Instrucciones detalladas que se cargan solo al activarse...</span></code></pre>
+
+  <h3>El truco clave: carga progresiva (progressive disclosure)</h3>
+  <p>Una Skill puede tener miles de líneas, pero <b>no llena la ventana</b>. El agente solo carga al inicio el <code>name</code> + <code>description</code> (unas pocas palabras). Si la tarea coincide con la descripción, entonces carga el cuerpo del <code>SKILL.md</code>; y solo si lo necesita, abre los archivos de <code>reference/</code>. Tres niveles, cargados bajo demanda:</p>
+
+  <div class="stack">
+    <div class="layer"><div class="lname">Nivel 1 · Metadatos</div><div class="ldesc">name + description (~pocos tokens). Siempre cargado. Sirve para que el modelo decida si la skill aplica.</div></div>
+    <div class="layer l2"><div class="lname">Nivel 2 · SKILL.md</div><div class="ldesc">El procedimiento completo. Se carga solo cuando la tarea activa la skill.</div></div>
+    <div class="layer l3"><div class="lname">Nivel 3 · Recursos</div><div class="ldesc">Scripts, docs de referencia, plantillas. Se abren uno a uno solo si hacen falta.</div></div>
+  </div>
+
+  <div class="note">
+    <span class="lbl">Skills vs MCP — no compiten</span>
+    <p>Se complementan. Un <b>MCP server</b> conecta al agente con un sistema externo (te da la tool <code>query_db</code>). Una <b>Skill</b> le enseña el <em>procedimiento y criterio</em> ("cómo redactar el reporte mensual a partir de esos datos, con nuestro formato"). Una skill puede incluso indicar al agente qué tools MCP usar y cómo.</p>
+  </div>
+
+  <h3>Quién las soporta</h3>
+  <p>El formato de Skills (carpeta + <code>SKILL.md</code>) nació en Claude / Claude Code y hoy es soportado también por Codex (Agent Skills) y otras herramientas. Al ser archivos de texto plano, son portables, versionables en git y compartibles entre equipos.</p>
+</section>
+
+<!-- 8 SUBAGENTES -->
+<section id="subagentes">
+  <div class="eyebrow"><span class="n">8</span> Protocolos</div>
+  <h2>Subagentes & sistemas multi-agente</h2>
+  <p class="lead">Un <b>subagente</b> es un agente que otro agente invoca como si fuera una herramienta. El agente principal (orquestador) delega una sub-tarea a un subagente con su <em>propia ventana de contexto limpia</em>, recibe solo el resultado final, y sigue. Es la táctica <em>isolate</em> del context engineering llevada a su extremo.</p>
+
+  <h3>Por qué delegar a subagentes</h3>
+  <ul class="clean">
+    <li><b>Aislar contexto</b> — una búsqueda exhaustiva puede leer 50 archivos. Si eso ocurre en la ventana principal, la contamina. Un subagente lo hace en su ventana y devuelve solo la conclusión.</li>
+    <li><b>Paralelizar</b> — varios subagentes pueden trabajar a la vez en partes independientes (explorar el frontend mientras otro explora el backend).</li>
+    <li><b>Especializar</b> — cada subagente puede tener su propio system prompt, herramientas y permisos (uno solo-lectura para investigar, otro con escritura para implementar).</li>
+  </ul>
+
+  <h3>El patrón orquestador–trabajador</h3>
+  <div class="arch">
+    <div class="box"><div class="bt">🧭 Orquestador</div><div class="bd">Descompone la tarea, reparte, integra resultados</div></div>
+    <div class="conn"><div class="line">⇊</div><div>delega<br>(tool: spawn)</div></div>
+    <div class="box"><div class="bt">🛠️ Subagentes</div><div class="bd">Worker 1 · Worker 2 · Worker 3<br>(ventanas independientes)</div></div>
+  </div>
+
+  <pre><code><span class="c-com"># El orquestador delega en paralelo</span>
+resultados = <span class="c-fn">paralelo</span>([
+    <span class="c-fn">subagente</span>(<span class="c-str">"explorer"</span>, <span class="c-str">"Mapea cómo funciona la auth en /backend"</span>),
+    <span class="c-fn">subagente</span>(<span class="c-str">"explorer"</span>, <span class="c-str">"Mapea el flujo de login en /frontend"</span>),
+])
+<span class="c-com"># cada subagente leyó decenas de archivos en SU ventana;</span>
+<span class="c-com"># el orquestador solo recibe 2 resúmenes limpios.</span>
+plan = <span class="c-fn">orquestador</span>.<span class="c-fn">sintetizar</span>(resultados)</code></pre>
+
+  <h3>Cuándo NO usar subagentes</h3>
+  <div class="note warn">
+    <span class="lbl">El coste oculto</span>
+    <p>Cada subagente arranca "en frío": no comparte el contexto que ya tienes. Re-derivar ese contexto cuesta tokens, tiempo y dinero. Para tareas simples o muy acopladas, un solo agente en un bucle es más eficiente. Los subagentes brillan en trabajo <b>amplio y paralelizable</b> (búsqueda masiva, exploración multi-módulo, verificación independiente), no en todo.</p>
+  </div>
+
+  <h3>Topologías multi-agente</h3>
+  <table class="tbl">
+    <tr><th>Patrón</th><th>Cómo funciona</th><th>Bueno para</th></tr>
+    <tr><td><b>Single agent loop</b></td><td>Un agente, un bucle, muchas tools</td><td>La mayoría de tareas. Empieza siempre aquí.</td></tr>
+    <tr><td><b>Orquestador–trabajador</b></td><td>Uno reparte, varios ejecutan, uno integra</td><td>Investigación amplia, tareas paralelizables</td></tr>
+    <tr><td><b>Pipeline / secuencial</b></td><td>Salida de un agente = entrada del siguiente</td><td>Flujos por etapas (investigar→escribir→revisar)</td></tr>
+    <tr><td><b>Verificador / crítico</b></td><td>Un 2º agente revisa el trabajo del 1º</td><td>Calidad, reducir errores, auto-corrección</td></tr>
+  </table>
+</section>
+
+<!-- 9 CLAUDE CODE -->
+<section id="claudecode">
+  <div class="eyebrow"><span class="n">9</span> Herramientas</div>
+  <h2>Claude Code</h2>
+  <p>Agente de codificación de Anthropic que vive en la terminal (también con extensiones de IDE y SDK). Es un agente "puro": un bucle con acceso a tu sistema de archivos, bash, web y MCP, diseñado para tareas de ingeniería de software de principio a fin.</p>
+
+  <div class="grid g2">
+    <div class="card"><div class="ic">📁</div><h4>Acceso real al repo</h4><p>Lee, edita y crea archivos; corre comandos y tests; trabaja sobre tu código de verdad, no copia-pega.</p></div>
+    <div class="card"><div class="ic">🧠</div><h4>CLAUDE.md</h4><p>Memoria de proyecto: convenciones, comandos, arquitectura. Se carga automáticamente.</p></div>
+    <div class="card"><div class="ic">🧩</div><h4>Skills, MCP, subagentes</h4><p>Soporta los tres mecanismos: extender con MCP, especializar con Skills, delegar con subagentes (tool Task).</p></div>
+    <div class="card"><div class="ic">⚡</div><h4>Slash commands & hooks</h4><p>Comandos personalizados, hooks para automatizar y plugins que empaquetan todo lo anterior.</p></div>
+  </div>
+
+  <h3>Conceptos propios</h3>
+  <ul class="clean">
+    <li><b>Slash commands</b> — atajos como <code>/init</code>, <code>/review</code>, o los tuyos, que inyectan un prompt predefinido.</li>
+    <li><b>Subagentes</b> — vía la herramienta <code>Task</code>, con tipos especializados (explorador, planificador, etc.) y su propia ventana.</li>
+    <li><b>Hooks</b> — scripts que se disparan en eventos (antes de editar, al terminar) para validar o automatizar.</li>
+    <li><b>Plugins & marketplaces</b> — paquetes instalables que agrupan skills, MCP servers y comandos.</li>
+    <li><b>Claude Agent SDK</b> — para construir tus propios agentes sobre el mismo motor.</li>
+  </ul>
+</section>
+
+<!-- 10 CODEX -->
+<section id="codex">
+  <div class="eyebrow"><span class="n">10</span> Herramientas</div>
+  <h2>Codex (OpenAI)</h2>
+  <p>El sistema de agentes de codificación de OpenAI, en 2026 unificado sobre GPT-5.5 / GPT-5.5 Pro, con superficies de terminal (CLI), IDE, web y nube que comparten un mismo modelo de ejecución. Diseñado para correr tareas largas de forma autónoma.</p>
+
+  <div class="grid g2">
+    <div class="card"><div class="ic">🔁</div><h4>Autonomía extrema</h4><p>Demostrado encadenando 1.000+ llamadas a herramientas en tareas reales sin intervención; se auto-verifica antes de entregar.</p></div>
+    <div class="card"><div class="ic">☁️</div><h4>Entornos en la nube</h4><p>Clona tu repo en un sandbox, escribe en varios archivos, corre tests, itera sobre fallos y abre un PR.</p></div>
+    <div class="card"><div class="ic">🧩</div><h4>Agent Skills</h4><p>Soporta Skills para alinear el trabajo (documentación, prototipos, code understanding) con los estándares de tu equipo.</p></div>
+    <div class="card"><div class="ic">🤖</div><h4>Automations</h4><p>Trabaja sin que se lo pidan: triage de issues, monitoreo de alertas, CI/CD y tareas rutinarias.</p></div>
+  </div>
+
+  <div class="note">
+    <span class="lbl">Worktrees & paralelismo</span>
+    <p>Con worktrees integrados y entornos en la nube, varios agentes Codex trabajan en paralelo entre proyectos. Usa <code>AGENTS.md</code> como archivo de memoria de proyecto (estándar que comparte con otras herramientas). Reportan ~4 millones de desarrolladores activos semanales en 2026.</p>
+  </div>
+</section>
+
+<!-- 11 OPENCODE -->
+<section id="opencode">
+  <div class="eyebrow"><span class="n">11</span> Herramientas</div>
+  <h2>OpenCode</h2>
+  <p>Agente de codificación <b>open source</b> nacido para la terminal, también con app de escritorio y extensión de IDE. Su rasgo distintivo: es <em>agnóstico del modelo</em> — funciona con 75+ modelos (Claude, OpenAI, Gemini, locales) y puede correr el bucle agéntico <b>100% local</b> con Ollama o LM Studio.</p>
+
+  <div class="grid g2">
+    <div class="card"><div class="ic">🔓</div><h4>Open source & privado</h4><p>No almacena tu código ni contexto. Apto para entornos sensibles; con modelos locales nada sale de tu máquina.</p></div>
+    <div class="card"><div class="ic">🧭</div><h4>Tipos de agente</h4><p>Build (todo habilitado), Plan (analiza sin tocar), Review (solo-lectura), Debug (investigación con bash).</p></div>
+    <div class="card"><div class="ic">🔬</div><h4>Integración LSP</h4><p>Ve el código vía Language Server Protocol: tipos reales, firmas, imports y diagnósticos del compilador en 20+ lenguajes.</p></div>
+    <div class="card"><div class="ic">🔌</div><h4>Multi-sesión & MCP</h4><p>Varios agentes en paralelo sobre el mismo proyecto; conecta GitHub, Postgres, Slack vía MCP.</p></div>
+  </div>
+
+  <div class="note tip">
+    <span class="lbl">El concepto de "tipos de agente"</span>
+    <p>OpenCode hace explícito algo que conviene entender: un mismo motor con <b>distintos permisos y tools</b> es un agente distinto. Un agente <em>Plan</em> sin escritura no puede romper nada; un <em>Review</em> solo-lectura es seguro para auditar. Restringir herramientas es una forma de seguridad y de enfoque.</p>
+  </div>
+</section>
+
+<!-- 12 COMPARATIVA -->
+<section id="comparativa">
+  <div class="eyebrow"><span class="n">12</span> Herramientas</div>
+  <h2>Comparativa</h2>
+  <p>Las tres comparten el mismo ADN agéntico (bucle + tools + MCP + skills). Difieren en modelo, apertura y filosofía.</p>
+
+  <table class="tbl">
+    <tr><th>&nbsp;</th><th>Claude Code</th><th>Codex</th><th>OpenCode</th></tr>
+    <tr><td><b>Creador</b></td><td>Anthropic</td><td>OpenAI</td><td>Open source (comunidad)</td></tr>
+    <tr><td><b>Modelo</b></td><td>Claude (Opus/Sonnet)</td><td>GPT-5.5 / Pro</td><td><span class="tag t-grn">75+ modelos</span> + locales</td></tr>
+    <tr><td><b>Código abierto</b></td><td><span class="tag t-dim">No (SDK sí)</span></td><td><span class="tag t-dim">CLI parcial</span></td><td><span class="tag t-grn">Sí, full</span></td></tr>
+    <tr><td><b>Superficies</b></td><td>CLI, IDE, SDK</td><td>CLI, IDE, web, nube</td><td>CLI, escritorio, IDE</td></tr>
+    <tr><td><b>MCP</b></td><td><span class="tag t-grn">Sí</span></td><td><span class="tag t-grn">Sí</span></td><td><span class="tag t-grn">Sí</span></td></tr>
+    <tr><td><b>Skills</b></td><td><span class="tag t-grn">Sí (nativo)</span></td><td><span class="tag t-grn">Agent Skills</span></td><td><span class="tag t-warn">vía config</span></td></tr>
+    <tr><td><b>Subagentes</b></td><td><span class="tag t-grn">Task tool</span></td><td><span class="tag t-grn">Multi-agente</span></td><td><span class="tag t-grn">Multi-sesión</span></td></tr>
+    <tr><td><b>Memoria proyecto</b></td><td>CLAUDE.md</td><td>AGENTS.md</td><td>AGENTS.md</td></tr>
+    <tr><td><b>Ejecución local</b></td><td><span class="tag t-dim">No</span></td><td><span class="tag t-dim">No</span></td><td><span class="tag t-grn">Sí (Ollama)</span></td></tr>
+    <tr><td><b>Ideal para</b></td><td>Ingeniería profunda con Claude</td><td>Autonomía a gran escala, nube</td><td>Privacidad, flexibilidad de modelo</td></tr>
+  </table>
+
+  <div class="note">
+    <span class="lbl">Lo que comparten (y es lo importante)</span>
+    <p>Si entiendes el <b>loop agéntico</b>, las <b>tools</b>, <b>MCP</b>, <b>Skills</b> y <b>subagentes</b>, entiendes las tres herramientas. Las diferencias son de empaquetado, modelo y apertura; el núcleo conceptual es idéntico. Aprende el modelo mental una vez y lo aplicas a cualquier herramienta —presente o futura.</p>
+  </div>
+</section>
+
+<!-- 13 PATRONES -->
+<section id="patrones">
+  <div class="eyebrow"><span class="n">13</span> Práctica</div>
+  <h2>Patrones agénticos</h2>
+  <p>Cuatro patrones de diseño cubren la mayoría de los agentes efectivos. Se combinan entre sí.</p>
+
+  <div class="grid g2">
+    <div class="card hl"><div class="ic">📝</div><h4>Planning</h4><p>El agente descompone la meta en pasos antes de actuar. Mejora tareas largas y reduce que se pierda a mitad de camino.</p></div>
+    <div class="card hl"><div class="ic">🔧</div><h4>Tool use</h4><p>El más básico y potente: dar al modelo herramientas para interactuar con el mundo real en vez de solo generar texto.</p></div>
+    <div class="card hl"><div class="ic">🪞</div><h4>Reflection</h4><p>El agente revisa su propio trabajo y lo corrige antes de entregar. A veces con un segundo agente como crítico.</p></div>
+    <div class="card hl"><div class="ic">👥</div><h4>Multi-agent</h4><p>Repartir el trabajo entre agentes especializados que colaboran. Útil cuando una sola ventana no alcanza.</p></div>
+  </div>
+
+  <h3>Reglas prácticas (lo que funciona)</h3>
+  <div id="rules">
+    <div class="toggle" data-t="r1">Empieza con el agente más simple posible <span class="chev">›</span></div>
+    <div class="toggle-body" id="r1">No añadas multi-agente, orquestadores ni grafos complejos hasta que un solo bucle con buenas tools demuestre no alcanzar. La complejidad cuesta latencia, tokens y fallos.</div>
+    <div class="toggle" data-t="r2">Las descripciones de tools son tu producto <span class="chev">›</span></div>
+    <div class="toggle-body" id="r2">El modelo decide qué hacer leyendo nombres y descripciones. Inviértele tiempo: di claramente qué hace cada tool, cuándo usarla y cuándo no. Esto aplica igual a Skills y MCP servers.</div>
+    <div class="toggle" data-t="r3">Protege la ventana de contexto <span class="chev">›</span></div>
+    <div class="toggle-body" id="r3">Mantén la ventana pequeña y relevante. Usa carga progresiva (Skills), retrieval bajo demanda y subagentes para aislar trabajo ruidoso. Más contexto ≠ mejor.</div>
+    <div class="toggle" data-t="r4">Diseña para la recuperación de errores <span class="chev">›</span></div>
+    <div class="toggle-body" id="r4">Devuelve mensajes de error claros y accionables al modelo. Un buen agente se auto-corrige si <em>ve</em> qué falló. Errores silenciosos o crípticos rompen el bucle.</div>
+    <div class="toggle" data-t="r5">Añade un paso de verificación <span class="chev">›</span></div>
+    <div class="toggle-body" id="r5">Para trabajo importante, cierra con verificación: correr tests, releer el diff, un subagente crítico. Es el patrón reflection y reduce errores drásticamente.</div>
+    <div class="toggle" data-t="r6">Pon límites y permisos <span class="chev">›</span></div>
+    <div class="toggle-body" id="r6">Define qué puede hacer el agente sin pedir permiso y qué requiere confirmación (borrar archivos, mover dinero, hacer deploy). Restringir tools por rol (como los tipos de agente de OpenCode) es seguridad real.</div>
+  </div>
+</section>
+
+<!-- 14 GLOSARIO -->
+<section id="glosario">
+  <div class="eyebrow"><span class="n">14</span> Referencia</div>
+  <h2>Glosario rápido</h2>
+  <table class="tbl">
+    <tr><th>Término</th><th>Definición</th></tr>
+    <tr><td><b>Agente</b></td><td>LLM dentro de un bucle con tools y autonomía para perseguir un objetivo.</td></tr>
+    <tr><td><b>Loop agéntico</b></td><td>Ciclo razonar → actuar → observar → repetir hasta cumplir la meta.</td></tr>
+    <tr><td><b>Tool / function call</b></td><td>Función que el modelo puede invocar (con esquema JSON) para actuar.</td></tr>
+    <tr><td><b>Tool use</b></td><td>Capacidad del modelo de decidir y emitir llamadas a herramientas.</td></tr>
+    <tr><td><b>ReAct</b></td><td>Patrón Reasoning+Acting: alternar pensamiento y acción.</td></tr>
+    <tr><td><b>Context window</b></td><td>Memoria de trabajo finita del modelo, medida en tokens.</td></tr>
+    <tr><td><b>Token</b></td><td>Unidad de texto que procesa el modelo (~0.75 palabras).</td></tr>
+    <tr><td><b>Context engineering</b></td><td>Gestionar qué entra/sale de la ventana durante una tarea.</td></tr>
+    <tr><td><b>Context rot</b></td><td>Degradación del razonamiento al saturar la ventana.</td></tr>
+    <tr><td><b>System prompt</b></td><td>Instrucciones permanentes que definen rol, reglas y tools.</td></tr>
+    <tr><td><b>MCP</b></td><td>Model Context Protocol: estándar abierto para conectar agentes con herramientas/datos externos.</td></tr>
+    <tr><td><b>MCP server</b></td><td>Proceso que expone tools, resources o prompts vía MCP.</td></tr>
+    <tr><td><b>Skill</b></td><td>Carpeta con SKILL.md que enseña a un agente un procedimiento especializado.</td></tr>
+    <tr><td><b>Progressive disclosure</b></td><td>Cargar la skill por niveles (metadatos→cuerpo→recursos) bajo demanda.</td></tr>
+    <tr><td><b>Subagente</b></td><td>Agente invocado por otro como tool, con su propia ventana de contexto.</td></tr>
+    <tr><td><b>Orquestador</b></td><td>Agente que descompone, delega e integra el trabajo de subagentes.</td></tr>
+    <tr><td><b>CLAUDE.md / AGENTS.md</b></td><td>Archivo de memoria de proyecto cargado al inicio del agente.</td></tr>
+    <tr><td><b>Hook</b></td><td>Script disparado por un evento del agente (pre-edit, post-run).</td></tr>
+    <tr><td><b>RAG / retrieval</b></td><td>Traer fragmentos relevantes a la ventana justo cuando se necesitan.</td></tr>
+    <tr><td><b>Reflection</b></td><td>Patrón donde el agente revisa y corrige su propio output.</td></tr>
+  </table>
+</section>
+
+<div class="foot">
+  <p><b>IA Agéntica — Guía Interactiva</b> · Fundamentos del trabajo agéntico, subagéntico y de IA.</p>
+  <p style="margin-top:8px">Fuentes consultadas (datos 2026 de herramientas): documentación de OpenAI Codex, OpenCode y reportes de la industria. Los conceptos de loop agéntico, MCP, Skills y context engineering se basan en estándares públicos del ecosistema.</p>
+</div>
+</main>
+</div>
+
+<script>
+// scrollspy + progress
+const links=[...document.querySelectorAll('nav a')];
+const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+const prog=document.getElementById('prog');
+function onScroll(){
+  const y=window.scrollY+120;
+  let cur=secs.length-1;
+  for(let i=0;i<secs.length;i++){ if(secs[i]&&secs[i].offsetTop>y){cur=i-1;break;} }
+  links.forEach(l=>l.classList.remove('active'));
+  if(cur>=0&&links[cur])links[cur].classList.add('active');
+  const h=document.body.scrollHeight-window.innerHeight;
+  prog.style.width=(window.scrollY/h*100)+'%';
+}
+window.addEventListener('scroll',onScroll); onScroll();
+
+// tabs
+document.querySelectorAll('.tabbtns').forEach(group=>{
+  group.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const tabs=group.parentElement;
+      group.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+      tabs.querySelectorAll('.tabpane').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      tabs.querySelector('#'+btn.dataset.tab).classList.add('active');
+    });
+  });
+});
+
+// toggles
+document.querySelectorAll('.toggle').forEach(t=>{
+  t.addEventListener('click',()=>{
+    const body=document.getElementById(t.dataset.t);
+    t.classList.toggle('open'); body.classList.toggle('open');
+  });
+});
+</script>
+</body>
+</html>
