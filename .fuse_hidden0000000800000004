@@ -1,0 +1,668 @@
+# 🧠 GUÍA COMPLETA: RAG y Fine-tuning desde Cero
+
+> Aprende a darle conocimiento y personalidad a un modelo de lenguaje (LLM), con las dos técnicas más usadas en la industria. Sin requisitos previos de IA, solo saber programar un poco en Python.
+
+## Tabla de Contenidos
+1. [Fundamentos: ¿Qué es un LLM?](#fundamentos-qué-es-un-llm)
+2. [El problema que resuelven RAG y Fine-tuning](#el-problema)
+3. [Embeddings: la base de todo](#embeddings)
+4. [RAG paso a paso](#rag-paso-a-paso)
+5. [Fine-tuning paso a paso](#fine-tuning-paso-a-paso)
+6. [RAG vs Fine-tuning: cuándo usar cada uno](#rag-vs-fine-tuning)
+7. [Proyecto completo: chatbot sobre tus documentos](#proyecto-completo)
+8. [Evaluación y producción](#evaluación-y-producción)
+9. [Roadmap, costos y FAQ](#roadmap)
+
+---
+
+# Fundamentos: ¿Qué es un LLM?
+
+## La idea en una frase
+
+Un **LLM** (Large Language Model, modelo grande de lenguaje) es un programa que predice **la siguiente palabra** más probable, dado un texto anterior. Eso es todo. GPT, Claude, Llama, Mistral… todos hacen lo mismo en el fondo.
+
+```text
+Entrada:  "El cielo es de color"
+Modelo:   calcula probabilidades → { azul: 0.81, gris: 0.07, ... }
+Salida:   "azul"
+```
+
+Repetir esto miles de veces, palabra a palabra, produce párrafos completos.
+
+## Dos límites importantes (y aquí entran RAG y Fine-tuning)
+
+```text
+1. CONOCIMIENTO CONGELADO
+   El modelo solo "sabe" lo que vio durante su entrenamiento.
+   No conoce tus documentos internos, ni lo que pasó ayer.
+
+2. NO RECUERDA NI APRENDE SOLO
+   Cada conversación empieza de cero. No memoriza lo que le dices
+   a menos que tú se lo vuelvas a pasar.
+```
+
+| Técnica | Qué le da al modelo | Analogía |
+|---------|--------------------|----------|
+| **RAG** | Información en el momento | Darle a alguien un libro abierto para que conteste consultando |
+| **Fine-tuning** | Comportamiento / estilo / formato | Mandar a alguien a un curso para que cambie su forma de responder |
+
+Esta tabla es el corazón de toda la guía. Si la entiendes, ya entendiste el 80%.
+
+---
+
+# El problema
+
+## Ejemplo concreto
+
+Imagina que trabajas en una empresa llamada *Acme* y quieres un asistente que responda preguntas sobre tu manual interno de 500 páginas.
+
+```text
+Usuario: "¿Cuántos días de vacaciones tengo según la política de Acme?"
+
+LLM normal (sin ayuda):
+  "No tengo acceso a la política específica de tu empresa,
+   pero generalmente..."  ❌ Inútil
+
+Lo que quieres:
+  "Según la política de Acme (sección 4.2), tienes 22 días
+   hábiles al año."  ✅
+```
+
+Hay dos formas de lograr lo segundo:
+
+```text
+OPCIÓN A — RAG:
+  Buscas en el manual el fragmento relevante y se lo pegas
+  al modelo dentro de la pregunta. El modelo lee y responde.
+  → Rápido de montar, datos siempre actualizables.
+
+OPCIÓN B — FINE-TUNING:
+  Reentrenas el modelo con miles de ejemplos hasta que
+  "absorba" el conocimiento o el estilo.
+  → Más caro y lento, pero cambia el comportamiento base.
+```
+
+En la práctica, **la mayoría de proyectos empiezan con RAG**. El fine-tuning se reserva para cuando RAG no basta. Veremos por qué.
+
+---
+
+# Embeddings
+
+> Concepto crítico 🚩. RAG no existe sin esto. Tómate tu tiempo aquí.
+
+## El problema de "buscar por significado"
+
+Buscar con `Ctrl+F` solo encuentra palabras exactas. Si el documento dice "remuneración" y el usuario pregunta por "sueldo", `Ctrl+F` falla. Necesitamos buscar **por significado**, no por letras.
+
+## Qué es un embedding
+
+Un **embedding** convierte un texto en una lista de números (un vector) que representa su *significado*. Textos con significado parecido producen vectores cercanos entre sí.
+
+```text
+"perro"      → [0.21, -0.04, 0.88, ...]   (1536 números, p.ej.)
+"cachorro"   → [0.19, -0.02, 0.85, ...]   ← muy cerca de "perro"
+"automóvil"  → [-0.55, 0.71, 0.02, ...]   ← lejos
+```
+
+Visualízalo como un mapa: palabras parecidas quedan juntas, distintas quedan lejos. La "distancia" entre dos vectores mide qué tan relacionados están.
+
+## Código: generar embeddings (las dos rutas)
+
+```python
+# ─────────────────────────────────────────────
+# RUTA 1: OpenAI (de pago, simple, muy buena calidad)
+# pip install openai
+# ─────────────────────────────────────────────
+from openai import OpenAI
+client = OpenAI(api_key="sk-...")
+
+resp = client.embeddings.create(
+    model="text-embedding-3-small",
+    input="¿Cuántos días de vacaciones tengo?"
+)
+vector = resp.data[0].embedding   # lista de 1536 floats
+print(len(vector))                # 1536
+
+
+# ─────────────────────────────────────────────
+# RUTA 2: HuggingFace (open-source, gratis, corre local)
+# pip install sentence-transformers
+# ─────────────────────────────────────────────
+from sentence_transformers import SentenceTransformer
+model = SentenceTransformer("all-MiniLM-L6-v2")  # se descarga 1 vez
+
+vector = model.encode("¿Cuántos días de vacaciones tengo?")
+print(vector.shape)               # (384,)
+```
+
+> Regla práctica: **OpenAI** = menos esfuerzo, pagas por uso. **HuggingFace** = gratis y privado, pero tú pones la máquina. Para aprender, MiniLM local es perfecto.
+
+## Medir similitud (similitud coseno)
+
+```python
+import numpy as np
+
+def similitud_coseno(a, b):
+    a, b = np.array(a), np.array(b)
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+    # Devuelve un número entre -1 y 1. Más cerca de 1 = más parecidos.
+
+emb = model.encode(["sueldo", "remuneración", "bicicleta"])
+print(similitud_coseno(emb[0], emb[1]))  # ~0.6  (parecidos)
+print(similitud_coseno(emb[0], emb[2]))  # ~0.1  (distintos)
+```
+
+Con esto ya puedes "buscar por significado". RAG no es más que automatizar esto a escala.
+
+---
+
+# RAG paso a paso
+
+**RAG** = *Retrieval-Augmented Generation* (Generación Aumentada por Recuperación). El nombre describe el flujo:
+
+```text
+RETRIEVAL  → busco fragmentos relevantes en mis documentos
+AUGMENTED  → los pego dentro del prompt
+GENERATION → el LLM genera la respuesta usando esos fragmentos
+```
+
+## El pipeline completo (visión de pájaro)
+
+```text
+FASE A — INGESTA (una sola vez, offline)
+  Documentos → Trocear (chunks) → Embeddings → Guardar en Vector DB
+
+FASE B — CONSULTA (cada pregunta, en tiempo real)
+  Pregunta → Embedding → Buscar chunks similares → 
+             Construir prompt con contexto → LLM → Respuesta
+```
+
+Vamos fase por fase.
+
+## Paso 1: Trocear los documentos (chunking)
+
+No puedes meter un PDF de 500 páginas en un prompt: no cabe y es caro. Lo cortas en **chunks** (trozos) de unos cientos de palabras.
+
+```python
+# pip install langchain-text-splitters
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+texto = open("manual_acme.txt").read()
+
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=500,       # ~500 caracteres por trozo
+    chunk_overlap=50,     # solapamiento: evita cortar ideas a la mitad
+)
+chunks = splitter.split_text(texto)
+print(f"{len(chunks)} trozos generados")
+```
+
+> Por qué importa el `overlap`: si una frase queda partida entre dos chunks, el solapamiento asegura que al menos uno la contenga completa. Empieza con `chunk_size=500, overlap=50` y ajusta.
+
+## Paso 2: Guardar en una Vector Database
+
+Una **vector DB** almacena los embeddings y, dado un vector de consulta, te devuelve los más cercanos en milisegundos (aunque tengas millones).
+
+```python
+# pip install chromadb
+import chromadb
+from sentence_transformers import SentenceTransformer
+
+model = SentenceTransformer("all-MiniLM-L6-v2")
+db = chromadb.Client()
+coleccion = db.create_collection("manual_acme")
+
+# Guardamos cada chunk con su embedding
+coleccion.add(
+    documents=chunks,
+    embeddings=[model.encode(c).tolist() for c in chunks],
+    ids=[f"chunk_{i}" for i in range(len(chunks))],
+)
+```
+
+| Vector DB | Cuándo usarla |
+|-----------|---------------|
+| **FAISS** | Local, rapidísima, para prototipos / un solo proceso |
+| **Chroma** | Local y simple, ideal para aprender (la usamos aquí) |
+| **Pinecone / Weaviate / Qdrant** | Producción, en la nube, escalan a millones |
+| **pgvector** | Ya usas PostgreSQL y quieres todo en un solo sitio |
+
+## Paso 3: Recuperar (retrieval)
+
+```python
+pregunta = "¿Cuántos días de vacaciones tengo?"
+
+resultados = coleccion.query(
+    query_embeddings=[model.encode(pregunta).tolist()],
+    n_results=3,          # los 3 chunks más relevantes
+)
+contexto = "\n\n".join(resultados["documents"][0])
+print(contexto)   # aquí aparecen los fragmentos del manual sobre vacaciones
+```
+
+## Paso 4: Aumentar el prompt y generar
+
+```python
+from openai import OpenAI
+client = OpenAI(api_key="sk-...")
+
+prompt = f"""Responde la pregunta usando SOLO el contexto.
+Si la respuesta no está en el contexto, di "No lo sé".
+
+Contexto:
+{contexto}
+
+Pregunta: {pregunta}
+"""
+
+respuesta = client.chat.completions.create(
+    model="gpt-5.4-mini",
+    messages=[{"role": "user", "content": prompt}],
+)
+print(respuesta.choices[0].message.content)
+# → "Según la política de Acme, tienes 22 días hábiles al año."
+```
+
+🎉 Eso es RAG completo. Cuatro pasos. La instrucción *"usa SOLO el contexto"* es clave: reduce las **alucinaciones** (que el modelo invente).
+
+## Lo mismo con LangChain (versión compacta)
+
+LangChain encadena estos pasos por ti. Útil cuando el proyecto crece.
+
+```python
+# pip install langchain langchain-openai langchain-community chromadb
+from langchain_community.vectorstores import Chroma
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain.chains import RetrievalQA
+
+# Ingesta
+store = Chroma.from_texts(chunks, OpenAIEmbeddings())
+
+# Cadena de pregunta-respuesta sobre los documentos
+qa = RetrievalQA.from_chain_type(
+    llm=ChatOpenAI(model="gpt-5.4-mini"),
+    retriever=store.as_retriever(search_kwargs={"k": 3}),
+)
+print(qa.invoke("¿Cuántos días de vacaciones tengo?"))
+```
+
+---
+
+# Fine-tuning paso a paso
+
+**Fine-tuning** = tomar un modelo ya entrenado y seguir entrenándolo con *tus* ejemplos, para cambiar **cómo** responde (estilo, formato, tono, tarea específica).
+
+## Cuándo SÍ tiene sentido
+
+```text
+✅ Quieres un estilo o formato MUY consistente
+   (ej: siempre responder en JSON, o con el tono de tu marca).
+✅ Una tarea repetitiva y acotada (clasificar tickets, extraer datos).
+✅ Quieres reducir el tamaño del prompt (el comportamiento ya está "dentro").
+✅ Necesitas que un modelo pequeño/barato imite a uno grande.
+
+❌ NO lo uses solo para "que sepa mis datos" → eso es trabajo de RAG.
+❌ NO si tus datos cambian a menudo → tendrías que reentrenar siempre.
+```
+
+## El ingrediente clave: el dataset
+
+Fine-tuning vive o muere por la calidad de los ejemplos. Necesitas pares **entrada → salida deseada**. Calidad > cantidad (50-100 ejemplos buenos superan a 1000 malos).
+
+```jsonl
+{"messages": [{"role": "user", "content": "Pedido #123 no llegó"}, {"role": "assistant", "content": "Lamento el inconveniente. He localizado el pedido #123 y..."}]}
+{"messages": [{"role": "user", "content": "Quiero cambiar mi talla"}, {"role": "assistant", "content": "¡Claro! Para cambios de talla, el proceso es..."}]}
+```
+
+> Formato `.jsonl`: un ejemplo JSON por línea. Es el estándar tanto en OpenAI como en HuggingFace.
+
+## Ruta 1: Fine-tuning gestionado (OpenAI)
+
+La forma más fácil: subes el archivo y ellos entrenan.
+
+```python
+from openai import OpenAI
+client = OpenAI(api_key="sk-...")
+
+# 1. Subir el dataset
+archivo = client.files.create(
+    file=open("datos.jsonl", "rb"),
+    purpose="fine-tune",
+)
+
+# 2. Lanzar el entrenamiento
+job = client.fine_tuning.jobs.create(
+    training_file=archivo.id,
+    model="gpt-5.4-mini",
+)
+
+# 3. Cuando termine, usas tu modelo personalizado igual que cualquier otro
+respuesta = client.chat.completions.create(
+    model="ft:gpt-5.4-mini:tu-org:nombre:abc123",   # tu modelo
+    messages=[{"role": "user", "content": "Mi pedido no llegó"}],
+)
+```
+
+Pagas por entrenamiento y por uso. No ves la máquina ni los pesos del modelo.
+
+> ⚠️ **Cambio importante (mayo 2026):** OpenAI está **cerrando su API de fine-tuning self-serve**. Las organizaciones que nunca la usaron ya no pueden crear trabajos nuevos, y el cierre total está previsto para enero de 2027. Si no necesitas imprescindiblemente fine-tuning gestionado, OpenAI recomienda **prompt caching + un modelo base pequeño** (GPT-5.4 mini/nano); si lo necesitas, ve a la **Ruta 2 (open-source con LoRA)** o a otro proveedor. Verifica el estado vigente en la documentación.
+
+## Ruta 2: Fine-tuning open-source con LoRA (HuggingFace + PEFT)
+
+Aquí entrenas un modelo abierto (Llama, Mistral…) en tu propia máquina/GPU. El truco para que sea viable se llama **LoRA**.
+
+### Por qué LoRA / PEFT
+
+Reentrenar *todos* los pesos de un modelo de 7.000 millones de parámetros necesita GPUs enormes. **PEFT** (*Parameter-Efficient Fine-Tuning*) y su método estrella **LoRA** entrenan solo unas pocas matrices pequeñas "pegadas" al modelo, congelando el resto.
+
+```text
+Fine-tuning completo:  ajustas el 100% de los pesos  → mucha GPU, caro
+LoRA:                  ajustas <1% de los pesos       → cabe en 1 GPU modesta
+
+Resultado de calidad: casi idéntico para la mayoría de tareas. 🔥
+```
+
+### Código mínimo con LoRA
+
+```python
+# pip install transformers peft datasets trl bitsandbytes
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from peft import LoraConfig
+from trl import SFTTrainer
+from datasets import load_dataset
+
+modelo_base = "mistralai/Mistral-7B-v0.1"   # didactico; en 2026 usa uno reciente: Llama 4 (Scout), Qwen3, Mistral Small 4 o Gemma 4 (verifica id en HF)
+tokenizer = AutoTokenizer.from_pretrained(modelo_base)
+model = AutoModelForCausalLM.from_pretrained(modelo_base, load_in_4bit=True)
+# load_in_4bit = comprime el modelo para que quepa en menos memoria (QLoRA)
+
+# Configuración LoRA: solo entrenamos estas matrices pequeñas
+lora = LoraConfig(
+    r=16,                 # "rango": tamaño de las matrices nuevas
+    lora_alpha=32,
+    target_modules=["q_proj", "v_proj"],   # qué capas adaptar
+    task_type="CAUSAL_LM",
+)
+
+datos = load_dataset("json", data_files="datos.jsonl", split="train")
+
+trainer = SFTTrainer(
+    model=model,
+    train_dataset=datos,
+    peft_config=lora,
+    tokenizer=tokenizer,
+)
+trainer.train()                 # ☕ aquí entrena
+trainer.save_model("./mi-modelo-lora")
+```
+
+> **QLoRA** = LoRA + cuantización a 4 bits (`load_in_4bit`). Es lo que permite afinar un modelo de 7B en una sola GPU de consumo (p.ej. una RTX con 16-24 GB).
+
+| Concepto | En una frase |
+|----------|-------------|
+| **PEFT** | Familia de técnicas para entrenar pocos parámetros |
+| **LoRA** | El método PEFT más usado: adaptadores pequeños |
+| **QLoRA** | LoRA sobre un modelo comprimido a 4 bits (más barato aún) |
+| **SFT** | *Supervised Fine-Tuning*: enseñar con pares pregunta→respuesta |
+
+---
+
+# RAG vs Fine-tuning
+
+## La tabla de decisión
+
+| Criterio | RAG | Fine-tuning |
+|----------|-----|-------------|
+| **Para qué sirve** | Darle *conocimiento* y datos frescos | Cambiar *comportamiento*, estilo, formato |
+| **Datos cambian seguido** | ✅ Ideal (solo actualizas la DB) | ❌ Habría que reentrenar |
+| **Costo inicial** | Bajo | Medio-alto |
+| **Costo por consulta** | Algo mayor (prompt más largo) | Menor (prompt corto) |
+| **Tiempo de montaje** | Horas | Días (datos + entreno + eval) |
+| **Riesgo de alucinación** | Bajo (cita fuentes) | Mayor si los datos no estaban |
+| **Trazabilidad** | ✅ Sabes de qué documento salió | ❌ Caja negra |
+| **Privacidad de datos** | Quedan en tu DB | Quedan "horneados" en los pesos |
+
+## Reglas mentales rápidas
+
+```text
+"Necesito que SEPA algo"          → RAG
+"Necesito que se COMPORTE así"    → Fine-tuning
+"Los datos cambian cada semana"   → RAG
+"Quiero respuestas siempre en X formato" → Fine-tuning
+"No estoy seguro"                 → Empieza con RAG (más barato y rápido)
+```
+
+## El secreto: casi nunca es "o uno u otro"
+
+Los sistemas serios combinan ambos:
+
+```text
+Fine-tuning  → enseña al modelo el TONO y el FORMATO de tu marca
+     +
+RAG          → le inyecta los DATOS actualizados en cada consulta
+     =
+Asistente con la personalidad correcta Y la información correcta. ✅
+```
+
+Empieza con **prompt engineering** (instrucciones buenas) → si no basta, añade **RAG** → si aún no basta, añade **fine-tuning**. En ese orden, de barato a caro.
+
+---
+
+# Proyecto completo
+
+## "Chatea con tus PDFs": RAG de principio a fin
+
+Un script ejecutable que ingiere un PDF y responde preguntas sobre él. Combina todo lo anterior.
+
+```python
+# pip install pypdf chromadb sentence-transformers openai
+import chromadb
+from pypdf import PdfReader
+from sentence_transformers import SentenceTransformer
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from openai import OpenAI
+
+# ── 1. Leer el PDF ───────────────────────────────────────────
+def leer_pdf(ruta):
+    reader = PdfReader(ruta)
+    return "\n".join(p.extract_text() for p in reader.pages)
+
+# ── 2. Trocear ───────────────────────────────────────────────
+def trocear(texto):
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=500, chunk_overlap=50)
+    return splitter.split_text(texto)
+
+# ── 3. Indexar en la vector DB ───────────────────────────────
+embed = SentenceTransformer("all-MiniLM-L6-v2")
+
+def indexar(chunks):
+    col = chromadb.Client().create_collection("docs")
+    col.add(
+        documents=chunks,
+        embeddings=[embed.encode(c).tolist() for c in chunks],
+        ids=[f"c{i}" for i in range(len(chunks))],
+    )
+    return col
+
+# ── 4. Responder ─────────────────────────────────────────────
+client = OpenAI(api_key="sk-...")
+
+def responder(col, pregunta):
+    res = col.query(
+        query_embeddings=[embed.encode(pregunta).tolist()],
+        n_results=3,
+    )
+    contexto = "\n\n".join(res["documents"][0])
+    prompt = (f"Usa SOLO este contexto. Si no está, di 'No lo sé'.\n\n"
+              f"Contexto:\n{contexto}\n\nPregunta: {pregunta}")
+    r = client.chat.completions.create(
+        model="gpt-5.4-mini",
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return r.choices[0].message.content
+
+# ── 5. Ejecutar ──────────────────────────────────────────────
+if __name__ == "__main__":
+    texto = leer_pdf("mi_documento.pdf")
+    col = indexar(trocear(texto))
+    while True:
+        q = input("\n🧑 Tu pregunta (o 'salir'): ")
+        if q.lower() == "salir":
+            break
+        print("🤖", responder(col, q))
+```
+
+Guárdalo como `chat_pdf.py`, pon tu API key, y tendrás un asistente sobre cualquier PDF. **Este es tu primer proyecto real: hazlo funcionar antes de seguir.**
+
+---
+
+# Evaluación y producción
+
+> El error de principiante #1: montar RAG, ver que "más o menos responde", y darlo por terminado. En serio, hay que **medir**.
+
+## Cómo saber si tu sistema es bueno
+
+```text
+RETRIEVAL (¿encuentra los chunks correctos?)
+  • Recall@k : ¿está el fragmento correcto entre los k recuperados?
+  • Si el retrieval falla, el LLM nunca podrá responder bien.
+
+GENERACIÓN (¿la respuesta es correcta?)
+  • Fidelidad (faithfulness): ¿se apoya en el contexto o inventa?
+  • Relevancia: ¿responde realmente lo que se preguntó?
+```
+
+Herramientas útiles: **RAGAS** y **LangSmith** para evaluar RAG; un conjunto de preguntas-respuesta de prueba ("golden set") que ejecutas en cada cambio.
+
+## Problemas comunes y cómo arreglarlos
+
+| Síntoma | Causa probable | Solución |
+|---------|---------------|----------|
+| Responde "No lo sé" demasiado | Chunks mal recuperados | Sube `n_results`, mejora el chunking |
+| Inventa datos (alucina) | Contexto pobre o prompt débil | Refuerza "usa SOLO el contexto" |
+| Respuestas lentas/caras | Prompt demasiado largo | Menos chunks, modelo más pequeño |
+| Mezcla temas | Chunks muy grandes | Reduce `chunk_size` |
+| Fine-tune ignora ejemplos | Pocos datos o mala calidad | Más ejemplos, más limpios |
+
+## Checklist antes de producción
+
+```text
+RAG
+- [ ] Pruebo con 20+ preguntas reales y mido aciertos
+- [ ] Manejo el caso "no está en los documentos"
+- [ ] Cito la fuente (qué documento/sección) en la respuesta
+- [ ] Re-indexo cuando los documentos cambian
+- [ ] Controlo costos (tamaño de prompt, modelo elegido)
+
+FINE-TUNING
+- [ ] Separé datos de entrenamiento y de validación
+- [ ] Verifiqué el formato del .jsonl (sin errores)
+- [ ] Comparé el modelo afinado vs el base con métricas
+- [ ] Documenté qué datos usé (para poder reentrenar)
+```
+
+---
+
+# Roadmap
+
+## Plan de aprendizaje sugerido
+
+```text
+SEMANA 1 — Fundamentos
+├─ Entiende qué es un LLM y qué son los embeddings
+├─ Ejecuta el código de similitud coseno
+└─ PROYECTO: busca el texto más parecido en una lista de 10 frases
+
+SEMANA 2 — RAG básico
+├─ Chunking + Chroma + retrieval
+├─ Haz funcionar el proyecto "chat_pdf.py"
+└─ PROYECTO: chatea con un PDF tuyo
+
+SEMANA 3 — RAG sólido
+├─ LangChain, prueba distintas vector DB
+├─ Mide con un golden set de preguntas
+└─ PROYECTO: añade citación de fuentes
+
+SEMANA 4 — Fine-tuning
+├─ Prepara un dataset .jsonl (50-100 ejemplos)
+├─ Prueba fine-tuning gestionado (OpenAI) primero
+└─ Luego LoRA/QLoRA con HuggingFace si tienes GPU
+
+SEMANA 5+ — Sistemas combinados
+├─ Fine-tune para el tono + RAG para los datos
+├─ Evaluación automática (RAGAS / LangSmith)
+└─ Despliegue (API, caché, control de costos)
+```
+
+## Idea de costos (junio 2026, aproximado y solo para ubicarte)
+
+```text
+RAG con APIs de pago:
+  • Embeddings: centavos por millón de tokens
+  • Generación: el grueso del costo, depende del modelo
+  • Vector DB local (Chroma/FAISS): gratis
+
+RAG 100% local (HuggingFace):
+  • Gratis en software; pagas la máquina/GPU/electricidad
+
+Fine-tuning:
+  • Gestionado (OpenAI): pagas entreno + un poco más por uso
+  • LoRA local: gratis salvo la GPU (o alquilas una por horas)
+```
+
+> Los precios cambian seguido. Antes de presupuestar un proyecto, revisa las páginas oficiales de precios del proveedor que elijas.
+
+## Preguntas Frecuentes
+
+**P: ¿Necesito una GPU para empezar?**
+R: No. RAG con embeddings locales pequeños (MiniLM) corre en CPU. Solo necesitas GPU para fine-tuning open-source serio.
+
+**P: ¿RAG o fine-tuning para un chatbot de soporte?**
+R: Casi siempre RAG (la información de productos cambia). Añade fine-tuning solo si necesitas un tono muy específico de marca.
+
+**P: ¿Cuántos ejemplos necesito para fine-tuning?**
+R: Empieza con 50-100 de alta calidad. Más no siempre es mejor; datos sucios empeoran el modelo.
+
+**P: ¿Qué vector DB elijo?**
+R: Para aprender, Chroma o FAISS (locales). Para producción a escala, Pinecone/Qdrant/Weaviate o pgvector si ya usas Postgres.
+
+**P: ¿Qué son las "alucinaciones"?**
+R: Cuando el modelo inventa información que suena convincente pero es falsa. RAG las reduce porque obligas a responder desde el contexto.
+
+**P: ¿Puedo combinar las dos rutas (OpenAI + HuggingFace)?**
+R: Sí, es muy común: RAG con embeddings de OpenAI y un modelo open-source afinado con LoRA para generar, o viceversa.
+
+**P: ¿Por dónde empiezo si solo tengo una tarde?**
+R: Haz funcionar `chat_pdf.py` de la sección Proyecto. Es el "Hola Mundo" de RAG.
+
+## Glosario rápido
+
+```text
+LLM         Modelo de lenguaje (GPT, Claude, Llama...)
+Embedding   Texto convertido en vector numérico de significado
+Chunk       Trozo de un documento
+Vector DB   Base de datos que busca por similitud de vectores
+RAG         Recuperar contexto + generar con él
+Retrieval   La fase de "buscar" en RAG
+Fine-tuning Reentrenar un modelo con tus ejemplos
+PEFT/LoRA   Fine-tuning barato (pocos parámetros)
+QLoRA       LoRA sobre un modelo comprimido a 4 bits
+SFT         Entrenar con pares pregunta→respuesta
+Alucinación Información inventada por el modelo
+Prompt      El texto de entrada que le das al modelo
+```
+
+---
+
+## 🎯 Punto de Partida (Elige UNO)
+
+- **"No sé nada de IA"** → Lee *Fundamentos* y *Embeddings*, ejecuta el código de similitud.
+- **"Quiero un asistente sobre mis documentos YA"** → Salta a *Proyecto completo* (`chat_pdf.py`).
+- **"Necesito un estilo/tono específico"** → Lee *Fine-tuning paso a paso*.
+- **"No sé cuál de los dos necesito"** → Lee *RAG vs Fine-tuning*.
+- **"Ya tengo algo y quiero mejorarlo"** → Lee *Evaluación y producción*.
+
+---
+
+¡Mucho éxito construyendo con LLMs! 🧠🚀
