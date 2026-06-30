@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG &amp; Fine-tuning · Guía Visual Interactiva</title>
+<style>
+:root{
+  color-scheme:light;
+  --orange:#6d5ef0; --orange-d:#4b3fd1; --blue:#0B72E7; --ink:#1d1d1f;
+  --muted:#6e6e73; --bg:#f5f5f7; --card:#ffffff; --line:#e4e4e9;
+  --code-bg:#1e1e2e; --green:#1aab5b; --amber:#e8930c; --red:#e4453a;
+  --radius:16px; --shadow:0 1px 3px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.05);
+  --sb:288px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
+
+/* ---------- Sidebar ---------- */
+.sidebar{position:fixed;top:0;left:0;width:var(--sb);height:100vh;background:#fff;border-right:1px solid var(--line);
+  overflow-y:auto;padding:22px 16px 60px;z-index:50}
+.brand{display:flex;align-items:center;gap:12px;padding:6px 8px 18px}
+.brand .logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--orange),#9d8aff);
+  display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 12px rgba(109,94,240,.35)}
+.brand h1{font-size:16px;margin:0;font-weight:700;letter-spacing:-.2px}
+.brand span{font-size:12px;color:var(--muted)}
+.nav-group{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);
+  font-weight:700;margin:18px 10px 6px}
+.nav a{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:10px;color:var(--ink);
+  text-decoration:none;font-size:14.5px;font-weight:500;cursor:pointer;transition:.15s;margin-bottom:2px}
+.nav a .ic{font-size:17px;width:22px;text-align:center}
+.nav a:hover{background:#f1f1f4}
+.nav a.active{background:linear-gradient(135deg,rgba(109,94,240,.12),rgba(109,94,240,.05));color:var(--orange-d);font-weight:600}
+.nav a.active .ic{filter:saturate(1.3)}
+.sb-progress{margin:16px 10px 4px;font-size:12px;color:var(--muted)}
+.sb-bar{height:8px;border-radius:6px;background:#ececed;overflow:hidden;margin-top:7px}
+.sb-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),#46d685);transition:width .4s}
+.sb-reset{margin:14px 10px 0;font-size:12px;color:var(--muted);background:none;border:1px solid var(--line);
+  padding:7px 10px;border-radius:8px;cursor:pointer;width:calc(100% - 20px)}
+.sb-reset:hover{background:#f1f1f4}
+
+/* ---------- Layout ---------- */
+.main{margin-left:var(--sb);max-width:920px;padding:40px 48px 120px}
+.page{display:none;animation:fade .35s ease}
+.page.show{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.page-head{margin-bottom:8px}
+.kicker{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--orange);background:rgba(109,94,240,.1);padding:5px 11px;border-radius:20px;margin-bottom:14px}
+h2.title{font-size:34px;line-height:1.15;margin:0 0 10px;letter-spacing:-.6px;font-weight:800}
+.lead{font-size:17px;color:var(--muted);margin:0 0 28px;max-width:680px}
+
+h3{font-size:23px;margin:42px 0 14px;letter-spacing:-.3px;font-weight:700;scroll-margin-top:24px}
+h4{font-size:17px;margin:26px 0 10px;font-weight:700}
+p{margin:12px 0}
+.main a{color:var(--blue)}
+
+/* ---------- Cards ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:22px 24px;margin:18px 0;box-shadow:var(--shadow)}
+.grid{display:grid;gap:16px}
+.grid.c2{grid-template-columns:repeat(2,1fr)}
+.grid.c3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:780px){.grid.c2,.grid.c3{grid-template-columns:1fr}}
+
+.module-card{cursor:pointer;display:flex;flex-direction:column;gap:8px;transition:.2s;text-decoration:none;color:inherit}
+.module-card:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.1);border-color:#d6d6dc}
+.module-card .emoji{font-size:30px}
+.module-card b{font-size:17px}
+.module-card small{color:var(--muted);font-size:13.5px}
+.tag{display:inline-block;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:20px;background:#eef1f5;color:#46506a;margin-top:auto;width:fit-content}
+
+/* ---------- Callouts ---------- */
+.callout{border-radius:14px;padding:14px 18px 14px 16px;margin:18px 0;border-left:4px solid;display:flex;gap:12px;font-size:15px}
+.callout .ci{font-size:19px;line-height:1.4}
+.callout.tip{background:#eef6ff;border-color:var(--blue)}
+.callout.good{background:#e9f9f0;border-color:var(--green)}
+.callout.warn{background:#fff6e6;border-color:var(--amber)}
+.callout.bad{background:#fdeceb;border-color:var(--red)}
+.callout b{font-weight:700}
+
+/* ---------- Code ---------- */
+.snippet{position:relative;margin:16px 0}
+.snippet pre{margin:0;background:var(--code-bg);border-radius:13px;padding:18px 20px;overflow-x:auto;
+  font-family:"SF Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13.5px;line-height:1.65}
+.snippet code{color:#e6e6f0;white-space:pre}
+.snippet .copy{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.1);color:#cfcfe0;border:none;
+  padding:5px 11px;border-radius:8px;font-size:12px;cursor:pointer;opacity:0;transition:.15s;font-weight:600}
+.snippet:hover .copy{opacity:1}
+.snippet .copy:hover{background:rgba(255,255,255,.22)}
+.snippet .copy.done{background:var(--green);color:#fff;opacity:1}
+.tok-c{color:#7f849c;font-style:italic}
+.tok-s{color:#a6e3a1}
+.tok-n{color:#fab387}
+.tok-k{color:#cba6f7;font-weight:600}
+.tok-t{color:#89dceb}
+.tok-a{color:#f9e2af}
+.tok-b{color:#f5c2e7}
+code.inline{background:#ececed;border-radius:6px;padding:2px 7px;font-family:"SF Mono",ui-monospace,monospace;font-size:13px;color:#7a37c0}
+
+/* ---------- Accordion ---------- */
+.acc{border:1px solid var(--line);border-radius:13px;margin:12px 0;overflow:hidden;background:#fff}
+.acc>summary{padding:15px 18px;font-weight:600;cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;font-size:15.5px}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary .chev{margin-left:auto;transition:.2s;color:var(--muted)}
+.acc[open]>summary .chev{transform:rotate(90deg)}
+.acc[open]>summary{border-bottom:1px solid var(--line)}
+.acc .acc-body{padding:6px 20px 18px}
+.lvl{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:20px}
+.lvl.b{background:#e9f9f0;color:#137a42}
+.lvl.i{background:#eef6ff;color:#0b5cc0}
+.lvl.a{background:#fdecea;color:#b25c00}
+
+/* ---------- Checklist ---------- */
+.check{display:flex;align-items:flex-start;gap:12px;padding:11px 14px;border:1px solid var(--line);
+  border-radius:11px;margin:8px 0;background:#fff;cursor:pointer;transition:.15s;user-select:none}
+.check:hover{background:#fafafb}
+.check input{display:none}
+.check .box{width:22px;height:22px;border:2px solid #cfcfd6;border-radius:7px;flex-shrink:0;margin-top:1px;
+  display:flex;align-items:center;justify-content:center;transition:.15s;font-size:14px;color:#fff}
+.check.done .box{background:var(--green);border-color:var(--green)}
+.check.done .txt{color:var(--muted);text-decoration:line-through}
+.check .txt{font-size:14.5px}
+
+/* ---------- Table ---------- */
+.tbl{width:100%;border-collapse:collapse;margin:18px 0;font-size:14px;background:#fff;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.tbl th{background:#f7f7f9;text-align:left;padding:12px 14px;font-weight:700;font-size:13px;border-bottom:1px solid var(--line)}
+.tbl td{padding:11px 14px;border-bottom:1px solid #f0f0f3;vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#fafafb}
+
+/* ---------- Steps ---------- */
+.step{display:flex;gap:16px;margin:14px 0}
+.step .num{flex-shrink:0;width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--orange),#9d8aff);
+  color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 3px 8px rgba(109,94,240,.3)}
+.step .st-body{flex:1;padding-top:3px}
+.step .st-body b{font-size:16px}
+
+/* ---------- Flow / timeline ---------- */
+.flow{background:#1e1e2e;color:#cdd6f4;border-radius:13px;padding:18px 22px;font-family:"SF Mono",ui-monospace,monospace;
+  font-size:13px;line-height:1.9;white-space:pre;overflow-x:auto;margin:16px 0}
+.flow .hl{color:#fab387;font-weight:700}
+.flow .gn{color:#a6e3a1}
+.flow .bl{color:#89dceb}
+
+.timeline{position:relative;margin:24px 0 8px;padding-left:8px}
+.tl-item{position:relative;padding:0 0 6px 30px;border-left:2px solid var(--line);margin-left:8px}
+.tl-item:last-child{border-left-color:transparent}
+.tl-dot{position:absolute;left:-9px;top:2px;width:18px;height:18px;border-radius:50%;background:#fff;
+  border:3px solid var(--orange)}
+.tl-item h4{margin:0 0 2px}
+.tl-week{font-size:12px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.5px}
+.tl-item p{margin:4px 0 18px;color:var(--muted);font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font-size:12px;background:#eef1f5;color:#46506a;padding:4px 10px;border-radius:20px;font-weight:500}
+.time-pill{font-size:12px;color:var(--amber);font-weight:600}
+
+.toc{background:#fff;border:1px solid var(--line);border-radius:13px;padding:14px 18px;margin:18px 0;font-size:14.5px}
+.toc b{display:block;margin-bottom:8px;font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.toc a{display:inline-block;margin:3px 10px 3px 0;color:var(--blue);text-decoration:none}
+.toc a:hover{text-decoration:underline}
+
+.pill-row{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 2px}
+.imp{font-size:13px;letter-spacing:1px}
+
+/* ---------- Glossary ---------- */
+.voc{display:flex;gap:16px;padding:11px 2px;border-bottom:1px solid var(--line);align-items:baseline}
+.voc:last-child{border-bottom:none}
+.voc b{flex:0 0 172px;color:var(--orange-d);font-weight:700;font-size:14px;font-family:"SF Mono",ui-monospace,monospace}
+.voc span{flex:1;color:var(--ink);font-size:14.5px}
+@media(max-width:620px){.voc{flex-direction:column;gap:3px}.voc b{flex:none}}
+html[data-theme="dark"] .voc b{color:#b9a8ff}
+
+/* ---------- Search ---------- */
+.search{position:relative;margin:6px 6px 4px}
+.search input{width:100%;border:1px solid var(--line);background:#f7f7f9;border-radius:11px;
+  padding:10px 12px 10px 34px;font-size:14px;color:var(--ink);outline:none;transition:.15s}
+.search input:focus{border-color:var(--orange);background:#fff;box-shadow:0 0 0 3px rgba(109,94,240,.12)}
+.search .si{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.6;pointer-events:none}
+.results{margin:6px 6px 0;background:var(--card);border:1px solid var(--line);border-radius:12px;
+  overflow:hidden;display:none;max-height:340px;overflow-y:auto;box-shadow:var(--shadow)}
+.results.show{display:block}
+.results .r{display:block;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid var(--line);
+  padding:10px 13px;cursor:pointer;color:var(--ink)}
+.results .r:last-child{border-bottom:none}
+.results .r:hover,.results .r.sel{background:rgba(109,94,240,.08)}
+.results .r b{font-size:13.5px;display:block;font-weight:600}
+.results .r small{font-size:11.5px;color:var(--muted)}
+.results .empty{padding:14px 13px;color:var(--muted);font-size:13px}
+mark.hl-find{background:#ffe39b;color:inherit;border-radius:3px;padding:0 1px}
+@keyframes flash{0%{background:rgba(109,94,240,.22)}100%{background:transparent}}
+.flash{animation:flash 1.6s ease}
+
+/* ---------- Theme toggle ---------- */
+.theme-row{display:flex;align-items:center;gap:8px;margin:14px 10px 2px}
+.theme-toggle{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;background:none;
+  border:1px solid var(--line);padding:8px 10px;border-radius:9px;cursor:pointer;color:var(--ink);font-size:13px;font-weight:600}
+.theme-toggle:hover{background:#f1f1f4}
+
+/* ---------- Dark theme ---------- */
+html[data-theme="dark"]{
+  --ink:#e7e7ee;--muted:#9a9aa6;--bg:#141418;--card:#1d1d23;--line:#2d2d36;
+  --shadow:0 1px 3px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+}
+html[data-theme="dark"] .sidebar{background:#1a1a1f}
+html[data-theme="dark"] .nav a:hover,
+html[data-theme="dark"] .sb-reset:hover,
+html[data-theme="dark"] .theme-toggle:hover{background:#26262e}
+html[data-theme="dark"] .sb-bar{background:#2d2d36}
+html[data-theme="dark"] .search input{background:#26262e}
+html[data-theme="dark"] .search input:focus{background:#1d1d23}
+html[data-theme="dark"] .acc,html[data-theme="dark"] .check,
+html[data-theme="dark"] .tbl,html[data-theme="dark"] .toc{background:#1d1d23}
+html[data-theme="dark"] .check:hover{background:#26262e}
+html[data-theme="dark"] .check .box{border-color:#44444f}
+html[data-theme="dark"] .tbl th{background:#26262e}
+html[data-theme="dark"] .tbl td{border-bottom-color:#26262e}
+html[data-theme="dark"] .tbl tr:hover td{background:#26262e}
+html[data-theme="dark"] .tl-dot{background:#1d1d23}
+html[data-theme="dark"] .chip,html[data-theme="dark"] .tag{background:#2d2d36;color:#b9c0d4}
+html[data-theme="dark"] code.inline{background:#2d2d36;color:#b9a8ff}
+html[data-theme="dark"] .module-card:hover{border-color:#3a3a45}
+html[data-theme="dark"] .callout.tip{background:#16263a}
+html[data-theme="dark"] .callout.good{background:#13301f}
+html[data-theme="dark"] .callout.warn{background:#332813}
+html[data-theme="dark"] .callout.bad{background:#341a18}
+html[data-theme="dark"] .lvl.b{background:#13301f;color:#5fd99a}
+html[data-theme="dark"] .lvl.i{background:#16263a;color:#79b8ff}
+html[data-theme="dark"] .lvl.a{background:#341f12;color:#ffb27a}
+html[data-theme="dark"] .topbar{background:rgba(20,20,24,.9)}
+html[data-theme="dark"] .topbar button{background:#1d1d23}
+html[data-theme="dark"] mark.hl-find{background:#7a5a00;color:#fff}
+
+/* ---------- Run button ---------- */
+.snippet .run{position:absolute;top:10px;right:74px;background:rgba(137,220,235,.18);color:#bfeaf5;border:none;
+  padding:5px 11px;border-radius:8px;font-size:12px;cursor:pointer;opacity:0;transition:.15s;font-weight:600}
+.snippet:hover .run{opacity:1}
+.snippet .run:hover{background:rgba(137,220,235,.32)}
+
+/* ---------- Nav progress badge ---------- */
+.navpct{margin-left:auto;font-size:11px;font-weight:700;color:var(--muted);background:#f0f0f3;
+  border-radius:20px;padding:2px 8px;min-width:24px;text-align:center}
+.navpct.full{background:var(--green);color:#fff}
+html[data-theme="dark"] .navpct{background:#2d2d36}
+
+/* ---------- Sidebar IO ---------- */
+.sb-io{display:flex;gap:8px;margin:8px 10px 0}
+.sb-io button{flex:1;font-size:11.5px;color:var(--muted);background:none;border:1px solid var(--line);
+  padding:7px 6px;border-radius:8px;cursor:pointer}
+.sb-io button:hover{background:#f1f1f4}
+html[data-theme="dark"] .sb-io button:hover{background:#26262e}
+
+/* ---------- Quiz ---------- */
+.quiz{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:18px 0;box-shadow:var(--shadow)}
+.quiz .q{font-weight:700;font-size:15.5px;margin-bottom:12px;display:flex;gap:9px}
+.quiz .q::before{content:"❓";font-size:15px}
+.quiz .opt{display:block;width:100%;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:10px;
+  padding:11px 14px;margin:7px 0;font-size:14.5px;cursor:pointer;transition:.15s;color:var(--ink)}
+.quiz .opt:hover:not(:disabled){border-color:var(--blue);background:#f5faff}
+.quiz .opt:disabled{cursor:default}
+.quiz .opt.correct{border-color:var(--green);background:#e9f9f0;font-weight:600}
+.quiz .opt.wrong{border-color:var(--red);background:#fdeceb}
+.quiz .qfb{margin-top:10px;font-size:14px;padding:10px 13px;border-radius:10px;display:none}
+.quiz .qfb.show{display:block}
+.quiz .qfb.ok{background:#e9f9f0;color:#137a42}
+.quiz .qfb.no{background:#fdeceb;color:#b3261e}
+html[data-theme="dark"] .quiz .opt{background:#26262e}
+html[data-theme="dark"] .quiz .opt:hover:not(:disabled){background:#1f2d3d}
+html[data-theme="dark"] .quiz .opt.correct{background:#13301f}
+html[data-theme="dark"] .quiz .opt.wrong{background:#341a18}
+html[data-theme="dark"] .quiz .qfb.ok{background:#13301f;color:#5fd99a}
+html[data-theme="dark"] .quiz .qfb.no{background:#341a18;color:#ff9d8a}
+
+/* ---------- Diagrams (SVG) ---------- */
+.diagram{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:18px 0;overflow-x:auto}
+.diagram svg{display:block;margin:0 auto;max-width:100%;height:auto}
+.diagram text{font-family:-apple-system,Segoe UI,Roboto,sans-serif}
+
+/* ---------- Flashcards ---------- */
+.fc-launch{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--orange),#9d8aff);
+  color:#fff;border:none;padding:11px 18px;border-radius:11px;font-size:15px;font-weight:700;cursor:pointer;
+  box-shadow:0 4px 12px rgba(109,94,240,.3);margin:8px 0 4px}
+.fc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:200;
+  display:none;align-items:center;justify-content:center;padding:24px}
+.fc-overlay.show{display:flex}
+.fc-modal{width:min(520px,100%);text-align:center}
+.fc-counter{color:#fff;font-size:13px;margin-bottom:12px;opacity:.85}
+.fc-card{background:var(--card);border-radius:20px;min-height:240px;display:flex;align-items:center;justify-content:center;
+  padding:34px 28px;cursor:pointer;box-shadow:0 20px 60px rgba(0,0,0,.4);position:relative;user-select:none}
+.fc-card .fc-term{font-size:26px;font-weight:800;letter-spacing:-.4px;font-family:"SF Mono",ui-monospace,monospace;color:var(--orange-d)}
+.fc-card .fc-def{font-size:17px;line-height:1.5;color:var(--ink)}
+.fc-hint{color:#fff;font-size:12px;opacity:.7;margin-top:12px}
+.fc-controls{display:flex;gap:10px;justify-content:center;margin-top:16px}
+.fc-controls button{background:rgba(255,255,255,.15);color:#fff;border:none;padding:10px 18px;border-radius:10px;
+  font-size:14px;font-weight:600;cursor:pointer}
+.fc-controls button:hover{background:rgba(255,255,255,.28)}
+.fc-close{position:absolute;top:-44px;right:0;background:rgba(255,255,255,.15);color:#fff;border:none;
+  width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer}
+html[data-theme="dark"] .fc-card .fc-term{color:#b9a8ff}
+
+/* ---------- a11y ---------- */
+.nav a:focus-visible,.theme-toggle:focus-visible,.sb-reset:focus-visible,.quiz .opt:focus-visible,
+.search input:focus-visible,.results .r:focus-visible,.sb-io button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+/* ---------- Print ---------- */
+@media print{
+  .sidebar,.topbar,.snippet .copy,.snippet .run,.fc-launch,.fc-overlay{display:none !important}
+  .main{margin:0;max-width:100%;padding:0}
+  .page{display:block !important;page-break-after:always}
+  .snippet pre{white-space:pre-wrap;border:1px solid #ccc}
+  body{background:#fff}
+  *{box-shadow:none !important}
+}
+
+.topbar{display:none}
+@media(max-width:880px){
+  .sidebar{transform:translateX(-100%);transition:.25s;box-shadow:8px 0 30px rgba(0,0,0,.15)}
+  .sidebar.open{transform:none}
+  .main{margin-left:0;padding:18px 18px 100px}
+  .topbar{display:flex;align-items:center;gap:12px;position:sticky;top:0;background:rgba(245,245,247,.9);
+    backdrop-filter:blur(10px);padding:12px 4px;margin:-18px -18px 10px;z-index:40;border-bottom:1px solid var(--line)}
+  .topbar button{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:18px;cursor:pointer}
+  .topbar b{font-size:15px}
+}
+</style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <div class="logo">🧠</div>
+    <div><h1>RAG &amp; Fine-tuning</h1><span>Guía visual interactiva</span></div>
+  </div>
+  <div class="search">
+    <span class="si">🔎</span>
+    <input id="searchInput" type="text" placeholder="Buscar tema… (p. ej. embeddings)" autocomplete="off">
+  </div>
+  <div class="results" id="results"></div>
+  <div class="sb-progress">Tu progreso global
+    <div class="sb-bar"><i id="globalBar"></i></div>
+    <span id="globalPct" style="font-size:11px">0% completado</span>
+  </div>
+  <nav class="nav" id="nav">
+    <div class="nav-group">Empezar</div>
+    <a data-go="home" class="active"><span class="ic">🏠</span> Inicio</a>
+    <div class="nav-group">Fundamentos</div>
+    <a data-go="fundamentos"><span class="ic">🧩</span> ¿Qué es un LLM?</a>
+    <a data-go="embeddings"><span class="ic">📐</span> Embeddings</a>
+    <div class="nav-group">Las dos técnicas</div>
+    <a data-go="rag"><span class="ic">📚</span> RAG paso a paso</a>
+    <a data-go="finetuning"><span class="ic">🎛️</span> Fine-tuning paso a paso</a>
+    <a data-go="comparativa"><span class="ic">⚖️</span> RAG vs Fine-tuning</a>
+    <div class="nav-group">Avanzado</div>
+    <a data-go="agentes"><span class="ic">🤖</span> Agentes y tool-calling</a>
+    <div class="nav-group">Práctica</div>
+    <a data-go="proyecto"><span class="ic">🛠️</span> Proyecto: chat con PDFs</a>
+    <a data-go="evaluacion"><span class="ic">📊</span> Evaluación y producción</a>
+    <div class="nav-group">Referencia</div>
+    <a data-go="roadmap"><span class="ic">🚀</span> Roadmap</a>
+    <a data-go="vocab"><span class="ic">📒</span> Vocabulario &amp; FAQ</a>
+  </nav>
+  <div class="theme-row">
+    <button class="theme-toggle" id="themeBtn"><span id="themeIcon">🌙</span> <span id="themeLabel">Modo oscuro</span></button>
+  </div>
+  <div class="sb-io">
+    <button id="exportBtn" aria-label="Exportar progreso">⬇ Exportar</button>
+    <button id="importBtn" aria-label="Importar progreso">⬆ Importar</button>
+    <input type="file" id="importFile" accept="application/json" hidden>
+  </div>
+  <button class="sb-reset" id="resetBtn">↺ Reiniciar progreso</button>
+</aside>
+
+<div class="fc-overlay" id="fcOverlay" role="dialog" aria-modal="true" aria-label="Flashcards">
+  <div class="fc-modal">
+    <button class="fc-close" id="fcClose" aria-label="Cerrar">✕</button>
+    <div class="fc-counter" id="fcCounter"></div>
+    <div class="fc-card" id="fcCard"><div class="fc-term" id="fcFace"></div></div>
+    <div class="fc-hint">Toca la tarjeta para girarla · ← → para navegar · espacio para voltear</div>
+    <div class="fc-controls">
+      <button id="fcPrev">‹ Anterior</button>
+      <button id="fcShuffle">🔀 Mezclar</button>
+      <button id="fcNext">Siguiente ›</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <button id="menuBtn">☰</button>
+    <b>RAG &amp; Fine-tuning · Guía visual</b>
+  </div>
+
+  <!-- ===================== INICIO ===================== -->
+  <section class="page show" id="page-home">
+    <div class="page-head">
+      <span class="kicker">Tu punto de partida</span>
+      <h2 class="title">RAG &amp; Fine-tuning desde cero</h2>
+      <p class="lead">Aprende a darle <b>conocimiento</b> y <b>personalidad</b> a un modelo de lenguaje (LLM) con las dos técnicas más usadas en la industria. Sin requisitos previos de IA: solo algo de Python. Marca tu progreso y vuelve cuando quieras.</p>
+    </div>
+
+    <h3 style="margin-top:18px">Las dos técnicas en una imagen</h3>
+    <div class="grid c2">
+      <a class="card module-card" data-jump="rag">
+        <span class="emoji">📚</span><b>RAG</b>
+        <small>Le das al modelo la información <i>en el momento</i> de responder, buscándola en tus documentos. Como darle un libro abierto para que conteste consultando.</small>
+        <span class="tag">Conocimiento · datos frescos</span>
+      </a>
+      <a class="card module-card" data-jump="finetuning">
+        <span class="emoji">🎛️</span><b>Fine-tuning</b>
+        <small>Reentrenas el modelo con tus ejemplos para cambiar <i>cómo</i> responde: estilo, tono, formato. Como mandar a alguien a un curso.</small>
+        <span class="tag">Comportamiento · estilo</span>
+      </a>
+    </div>
+    <div class="callout tip"><span class="ci">💡</span><div><b>Si entiendes esta distinción, ya entendiste el 80%.</b> RAG = "que SEPA algo". Fine-tuning = "que se COMPORTE así". La mayoría de proyectos empiezan con RAG porque es más rápido y barato.</div></div>
+
+    <h3>Elige por dónde empezar</h3>
+    <div class="grid c2">
+      <a class="card module-card" data-jump="fundamentos">
+        <span class="emoji">🧩</span><b>No sé nada de IA</b>
+        <small>Empieza por los fundamentos: qué es un LLM, por qué "no sabe" tus datos, y qué son los embeddings.</small>
+        <span class="tag">Principiante</span>
+      </a>
+      <a class="card module-card" data-jump="proyecto">
+        <span class="emoji">🛠️</span><b>Quiero un asistente sobre mis PDFs YA</b>
+        <small>Salta al proyecto: un script ejecutable que ingiere un PDF y responde preguntas sobre él. El "Hola Mundo" de RAG.</small>
+        <span class="tag">Práctica · 1 tarde</span>
+      </a>
+      <a class="card module-card" data-jump="comparativa">
+        <span class="emoji">⚖️</span><b>No sé cuál de los dos necesito</b>
+        <small>Tabla de decisión, reglas mentales rápidas y por qué casi siempre se combinan ambas.</small>
+        <span class="tag">Decisión</span>
+      </a>
+      <a class="card module-card" data-jump="evaluacion">
+        <span class="emoji">📊</span><b>Ya tengo algo y quiero mejorarlo</b>
+        <small>Cómo medir si tu RAG es bueno, problemas comunes y checklist antes de producción.</small>
+        <span class="tag">Avanzado</span>
+      </a>
+    </div>
+
+    <h3>El camino, semana a semana</h3>
+    <p>Plan recomendado para pasar de cero a construir sistemas reales. Los embeddings y RAG son los pilares; el fine-tuning llega después.</p>
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-dot"></div>
+        <div class="tl-week">Semana 1</div><h4>Fundamentos</h4>
+        <p>Qué es un LLM, sus límites, y embeddings (buscar por significado). <span class="time-pill">⏱ 6-8 h</span></p>
+        <div class="chips"><span class="chip">LLM</span><span class="chip">tokens</span><span class="chip">embeddings</span><span class="chip">similitud coseno</span></div>
+      </div>
+      <div class="tl-item"><div class="tl-dot" style="border-color:var(--blue)"></div>
+        <div class="tl-week">Semana 2 · ⭐ pilar</div><h4>RAG básico</h4>
+        <p>Chunking, vector DB (Chroma), retrieval y prompt aumentado. <span class="time-pill">⏱ 10-12 h</span></p>
+        <div class="chips"><span class="chip">chunking</span><span class="chip">Chroma</span><span class="chip">retrieval</span><span class="chip">LangChain</span></div>
+      </div>
+      <div class="tl-item"><div class="tl-dot"></div>
+        <div class="tl-week">Semana 3</div><h4>RAG sólido</h4>
+        <p>Distintas vector DB, citación de fuentes y medición con un golden set. <span class="time-pill">⏱ 10-12 h</span></p>
+        <div class="chips"><span class="chip">FAISS</span><span class="chip">pgvector</span><span class="chip">RAGAS</span><span class="chip">citas</span></div>
+      </div>
+      <div class="tl-item"><div class="tl-dot" style="border-color:var(--blue)"></div>
+        <div class="tl-week">Semana 4 · ⭐ clave</div><h4>Fine-tuning</h4>
+        <p>Datasets .jsonl, ruta gestionada (OpenAI) y LoRA/QLoRA open-source. <span class="time-pill">⏱ 12-16 h</span></p>
+        <div class="chips"><span class="chip">.jsonl</span><span class="chip">SFT</span><span class="chip">LoRA</span><span class="chip">QLoRA</span></div>
+      </div>
+      <div class="tl-item"><div class="tl-dot"></div>
+        <div class="tl-week">Semana 5+</div><h4>Sistemas combinados</h4>
+        <p>Fine-tune para el tono + RAG para los datos, evaluación automática y despliegue. <span class="time-pill">⏱ variable</span></p>
+        <div class="chips"><span class="chip">híbrido</span><span class="chip">evaluación</span><span class="chip">costos</span><span class="chip">deploy</span></div>
+      </div>
+    </div>
+
+    <div class="callout good"><span class="ci">✅</span><div><b>Cómo estudiar con esta guía.</b> Cada sección tiene listas marcables (✓) y tu progreso se guarda en este navegador (barra izquierda). Hay quizzes para autoevaluarte y flashcards en la sección de Vocabulario. Mejor proporción: 40% teoría, 60% código.</div></div>
+    <div class="callout tip"><span class="ci">🤖</span><div><b>¿Vienes del mundo de los agentes?</b> Este tutorial profundiza en RAG y fine-tuning. Para ver cómo encajan en el ecosistema agéntico (loop, tools, MCP, subagentes), vuelve a la <a href="index.html">Guía de IA Agéntica</a>.</div></div>
+  </section>
+
+  <!-- ===================== FUNDAMENTOS ===================== -->
+  <section class="page" id="page-fundamentos">
+    <div class="page-head">
+      <span class="kicker">Fundamentos</span>
+      <h2 class="title">¿Qué es un LLM y por qué necesita ayuda?</h2>
+      <p class="lead">Antes de RAG o fine-tuning, hay que entender qué hace —y qué NO hace— un modelo de lenguaje. Spoiler: solo predice la siguiente palabra.</p>
+    </div>
+
+    <h3>La idea en una frase</h3>
+    <p>Un <b>LLM</b> (Large Language Model) es un programa que predice <b>la siguiente palabra</b> más probable dado un texto anterior. Eso es todo. GPT, Claude, Llama, Mistral… todos hacen lo mismo en el fondo.</p>
+    <div class="flow">Entrada:  <span class="bl">"El cielo es de color"</span>
+Modelo:   calcula probabilidades → { <span class="gn">azul: 0.81</span>, gris: 0.07, ... }
+Salida:   <span class="hl">"azul"</span>
+
+Repite palabra a palabra → párrafos completos.</div>
+
+    <h3>Dos límites importantes (aquí entran RAG y Fine-tuning)</h3>
+    <div class="grid c2">
+      <div class="card">
+        <h4 style="margin-top:0">1. Conocimiento congelado 🧊</h4>
+        <p style="margin-bottom:0">El modelo solo "sabe" lo que vio durante su entrenamiento. No conoce tus documentos internos, ni lo que pasó ayer, ni la política de tu empresa.</p>
+      </div>
+      <div class="card">
+        <h4 style="margin-top:0">2. No recuerda ni aprende solo 🔁</h4>
+        <p style="margin-bottom:0">Cada conversación empieza de cero. No memoriza lo que le dices, a menos que tú se lo vuelvas a pasar en el siguiente mensaje.</p>
+      </div>
+    </div>
+
+    <h3>El problema, con un ejemplo concreto</h3>
+    <p>Trabajas en una empresa llamada <i>Acme</i> y quieres un asistente que responda sobre tu manual interno de 500 páginas.</p>
+    <div class="flow">Usuario: "¿Cuántos días de vacaciones tengo según la política de Acme?"
+
+LLM normal (sin ayuda):
+  "No tengo acceso a la política específica de tu empresa,
+   pero generalmente..."   <span class="hl">❌ Inútil</span>
+
+Lo que quieres:
+  "Según la política de Acme (sección 4.2), tienes 22 días
+   hábiles al año."        <span class="gn">✅</span></div>
+
+    <p>Hay dos formas de lograr lo segundo, y son justo nuestras dos técnicas:</p>
+    <table class="tbl">
+      <tr><th>Técnica</th><th>Qué le da al modelo</th><th>Analogía</th></tr>
+      <tr><td><b>RAG</b></td><td>Información en el momento</td><td>Darle un libro abierto para que conteste consultando</td></tr>
+      <tr><td><b>Fine-tuning</b></td><td>Comportamiento, estilo, formato</td><td>Mandarlo a un curso para que cambie su forma de responder</td></tr>
+    </table>
+
+    <div class="callout tip"><span class="ci">💡</span><div><b>Orden recomendado, de barato a caro:</b> primero <b>prompt engineering</b> (mejores instrucciones) → si no basta, <b>RAG</b> → si aún no basta, <b>fine-tuning</b>. No empieces por lo más caro.</div></div>
+
+    <h3>Mini-glosario para arrancar</h3>
+    <div class="card">
+      <div class="voc"><b>Token</b><span>La unidad que el modelo procesa: trozos de palabra. "vacaciones" puede ser 2-3 tokens. Pagas y mides en tokens.</span></div>
+      <div class="voc"><b>Prompt</b><span>El texto de entrada que le das al modelo. RAG consiste en enriquecer el prompt con contexto.</span></div>
+      <div class="voc"><b>Alucinación</b><span>Cuando el modelo inventa información que suena convincente pero es falsa. RAG las reduce.</span></div>
+      <div class="voc"><b>Contexto</b><span>Todo lo que el modelo "ve" en una petición. Tiene un límite (ventana de contexto).</span></div>
+    </div>
+
+    <div class="quiz" data-correct="1" data-explain="Un LLM solo predice texto a partir de lo que aprendió; no tiene acceso a tus documentos privados ni a eventos posteriores a su entrenamiento.">
+      <div class="q">¿Por qué un LLM "normal" no puede responder sobre el manual interno de tu empresa?</div>
+      <button class="opt">Porque los LLM no entienden español</button>
+      <button class="opt">Porque su conocimiento está congelado en el entrenamiento y no vio tus documentos</button>
+      <button class="opt">Porque siempre alucina las respuestas</button>
+    </div>
+    <div class="quiz" data-correct="0" data-explain="De barato a caro: primero afinas el prompt, luego añades RAG (datos), y solo si hace falta, fine-tuning (comportamiento). Empezar por lo más caro es el error clásico.">
+      <div class="q">¿En qué orden conviene atacar un problema con un LLM?</div>
+      <button class="opt">Prompt engineering → RAG → fine-tuning</button>
+      <button class="opt">Fine-tuning → RAG → prompt engineering</button>
+      <button class="opt">Da igual el orden, todos cuestan lo mismo</button>
+    </div>
+
+    <h4>Verifica tu comprensión</h4>
+    <label class="check" data-id="fun1"><span class="box"></span><span class="txt">Entiendo que un LLM solo predice la siguiente palabra</span></label>
+    <label class="check" data-id="fun2"><span class="box"></span><span class="txt">Sé por qué un LLM no conoce mis datos privados ni eventos recientes</span></label>
+    <label class="check" data-id="fun3"><span class="box"></span><span class="txt">Puedo explicar la diferencia RAG (saber) vs fine-tuning (comportarse)</span></label>
+  </section>
+
+  <!-- ===================== EMBEDDINGS ===================== -->
+  <section class="page" id="page-embeddings">
+    <div class="page-head">
+      <span class="kicker">Fundamentos · 🚩 crítico</span>
+      <h2 class="title">Embeddings: buscar por significado</h2>
+      <p class="lead">RAG no existe sin esto. Un embedding convierte texto en números que representan su <i>significado</i>. Tómate tu tiempo aquí.</p>
+    </div>
+
+    <h3>El problema de "buscar por significado"</h3>
+    <p>Buscar con <code class="inline">Ctrl+F</code> solo encuentra palabras exactas. Si el documento dice "remuneración" y el usuario pregunta por "sueldo", <code class="inline">Ctrl+F</code> falla. Necesitamos buscar por <b>significado</b>, no por letras.</p>
+
+    <h3>Qué es un embedding</h3>
+    <p>Un <b>embedding</b> convierte un texto en una lista de números (un vector). Textos con significado parecido producen vectores cercanos entre sí. Visualízalo como un mapa: palabras parecidas quedan juntas, distintas quedan lejos.</p>
+    <div class="diagram">
+      <svg viewBox="0 0 560 260" role="img" aria-label="Mapa de embeddings">
+        <rect x="1" y="1" width="558" height="258" rx="12" fill="none" stroke="var(--line)"/>
+        <line x1="40" y1="220" x2="520" y2="220" stroke="var(--muted)" stroke-width="1.5"/>
+        <line x1="40" y1="220" x2="40" y2="30" stroke="var(--muted)" stroke-width="1.5"/>
+        <!-- cluster animales -->
+        <circle cx="130" cy="90" r="9" fill="#6d5ef0"/><text x="144" y="94" font-size="13" fill="var(--ink)">perro</text>
+        <circle cx="160" cy="115" r="9" fill="#6d5ef0"/><text x="174" y="119" font-size="13" fill="var(--ink)">cachorro</text>
+        <circle cx="110" cy="130" r="9" fill="#6d5ef0"/><text x="40" y="134" font-size="13" fill="var(--ink)">gato</text>
+        <ellipse cx="135" cy="112" rx="80" ry="55" fill="#6d5ef0" opacity="0.08"/>
+        <!-- cluster vehiculos -->
+        <circle cx="400" cy="150" r="9" fill="#0B72E7"/><text x="414" y="154" font-size="13" fill="var(--ink)">automóvil</text>
+        <circle cx="430" cy="180" r="9" fill="#0B72E7"/><text x="444" y="184" font-size="13" fill="var(--ink)">camión</text>
+        <ellipse cx="415" cy="165" rx="70" ry="45" fill="#0B72E7" opacity="0.08"/>
+        <text x="270" y="248" font-size="12" fill="var(--muted)" text-anchor="middle">Cada texto = un punto. Cerca = significados parecidos.</text>
+      </svg>
+    </div>
+    <div class="flow"><span class="bl">"perro"</span>      → [0.21, -0.04, 0.88, ...]   (p.ej. 1536 números)
+<span class="bl">"cachorro"</span>   → [0.19, -0.02, 0.85, ...]   <span class="gn">← muy cerca de "perro"</span>
+<span class="bl">"automóvil"</span>  → [-0.55, 0.71, 0.02, ...]   <span class="hl">← lejos</span></div>
+
+    <h3>Generar embeddings · las dos rutas</h3>
+    <details class="acc" open><summary><span class="lvl i">RUTA 1</span> OpenAI — de pago, simple, gran calidad <span class="chev">›</span></summary>
+    <div class="acc-body">
+    <script type="text/python">
+# pip install openai
+from openai import OpenAI
+client = OpenAI(api_key="sk-...")
+
+resp = client.embeddings.create(
+    model="text-embedding-3-small",
+    input="¿Cuántos días de vacaciones tengo?"
+)
+vector = resp.data[0].embedding   # lista de 1536 floats
+print(len(vector))                # 1536
+    </script>
+    </div></details>
+
+    <details class="acc"><summary><span class="lvl b">RUTA 2</span> HuggingFace — open-source, gratis, corre local <span class="chev">›</span></summary>
+    <div class="acc-body">
+    <script type="text/python">
+# pip install sentence-transformers
+from sentence_transformers import SentenceTransformer
+model = SentenceTransformer("all-MiniLM-L6-v2")  # se descarga 1 vez
+
+vector = model.encode("¿Cuántos días de vacaciones tengo?")
+print(vector.shape)               # (384,)
+    </script>
+    </div></details>
+
+    <div class="callout good"><span class="ci">⚖️</span><div><b>Regla práctica:</b> OpenAI = menos esfuerzo, pagas por uso. HuggingFace = gratis y privado, pero tú pones la máquina. Para aprender, <b>MiniLM local</b> es perfecto y corre hasta en CPU.</div></div>
+
+    <h3>Medir similitud (similitud coseno)</h3>
+    <p>La "distancia" entre dos vectores mide qué tan relacionados están. La fórmula estándar es la <b>similitud coseno</b>: devuelve un número entre -1 y 1; cerca de 1 = muy parecidos.</p>
+    <script type="text/python">
+import numpy as np
+
+def similitud_coseno(a, b):
+    a, b = np.array(a), np.array(b)
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+emb = model.encode(["sueldo", "remuneración", "bicicleta"])
+print(similitud_coseno(emb[0], emb[1]))  # ~0.6  (parecidos)
+print(similitud_coseno(emb[0], emb[2]))  # ~0.1  (distintos)
+    </script>
+    <p>Con esto ya puedes "buscar por significado". <b>RAG no es más que automatizar esto a escala</b>, sobre millones de fragmentos, en milisegundos.</p>
+
+    <h3>⚠️ Errores típicos con embeddings</h3>
+    <div class="callout bad"><span class="ci">⚠️</span><div><b>Mezclar modelos de embedding.</b> Los vectores de OpenAI y de MiniLM NO son comparables entre sí. Indexa y consulta siempre con el <i>mismo</i> modelo.</div></div>
+    <div class="callout bad"><span class="ci">⚠️</span><div><b>Usar un modelo solo-inglés con texto en español.</b> La calidad cae. Elige un modelo multilingüe si tus datos no son en inglés.</div></div>
+    <div class="callout bad"><span class="ci">⚠️</span><div><b>Re-generar embeddings en cada consulta del mismo documento.</b> Cuesta tiempo y dinero: genera una vez en la ingesta y guarda en la vector DB.</div></div>
+    <div class="callout tip"><span class="ci">🗓️</span><div><b>Nota de vigencia.</b> <code class="inline">text-embedding-3-small</code> y <code class="inline">all-MiniLM-L6-v2</code> pueden tener sucesores mejores. Revisa el ranking <b>MTEB</b> y la doc del proveedor al elegir.</div></div>
+
+    <div class="quiz" data-correct="2" data-explain="Los embeddings capturan significado: 'sueldo' y 'remuneración' producen vectores cercanos aunque no compartan ni una letra. Por eso superan a la búsqueda por palabra exacta.">
+      <div class="q">¿Por qué un embedding encuentra "remuneración" cuando buscas "sueldo"?</div>
+      <button class="opt">Porque ambas palabras empiezan con la misma letra</button>
+      <button class="opt">Porque el modelo traduce las palabras a inglés primero</button>
+      <button class="opt">Porque sus vectores quedan cerca: significan casi lo mismo</button>
+    </div>
+    <div class="quiz" data-correct="1" data-explain="Una similitud coseno cercana a 1 indica vectores casi alineados, es decir, significados muy parecidos. Cercana a 0, sin relación.">
+      <div class="q">Dos textos tienen similitud coseno de 0.92. ¿Qué significa?</div>
+      <button class="opt">Que son opuestos en significado</button>
+      <button class="opt">Que sus significados son muy parecidos</button>
+      <button class="opt">Que uno está en otro idioma</button>
+    </div>
+
+    <h4>Verifica tu comprensión</h4>
+    <label class="check" data-id="emb1"><span class="box"></span><span class="txt">Entiendo qué es un embedding (texto → vector de significado)</span></label>
+    <label class="check" data-id="emb2"><span class="box"></span><span class="txt">Ejecuté el código de similitud coseno y vi números altos/bajos</span></label>
+    <label class="check" data-id="emb3"><span class="box"></span><span class="txt">Sé elegir entre embeddings de OpenAI y de HuggingFace</span></label>
+  </section>
+  <!-- ===================== RAG ===================== -->
+  <section class="page" id="page-rag">
+    <div class="page-head">
+      <span class="kicker">Técnica 1</span>
+      <h2 class="title">RAG paso a paso</h2>
+      <p class="lead"><b>RAG</b> = <i>Retrieval-Augmented Generation</i>. El nombre describe el flujo: <b>recupero</b> fragmentos relevantes, los <b>pego</b> en el prompt, y el LLM <b>genera</b> la respuesta usándolos.</p>
+    </div>
+
+    <div class="toc"><b>En esta página</b>
+      <a href="#rag-pipeline">Pipeline completo</a>
+      <a href="#rag-paso1">1 · Chunking</a>
+      <a href="#rag-paso2">2 · Vector DB</a>
+      <a href="#rag-paso3">3 · Retrieval</a>
+      <a href="#rag-paso4">4 · Generar</a>
+      <a href="#rag-langchain">LangChain</a>
+      <a href="#rag-errores">⚠️ Errores típicos</a>
+    </div>
+
+    <h3 id="rag-pipeline">El pipeline completo</h3>
+    <div class="diagram">
+      <svg viewBox="0 0 620 300" role="img" aria-label="Pipeline de RAG">
+        <rect x="1" y="1" width="618" height="298" rx="12" fill="none" stroke="var(--line)"/>
+        <text x="20" y="28" font-size="12" font-weight="700" fill="var(--orange)">FASE A · INGESTA (una vez, offline)</text>
+        <g font-size="12" fill="#fff" text-anchor="middle">
+          <rect x="20" y="42" width="100" height="40" rx="8" fill="#6d5ef0"/><text x="70" y="66">Documentos</text>
+          <rect x="145" y="42" width="100" height="40" rx="8" fill="#6d5ef0"/><text x="195" y="61">Trocear</text><text x="195" y="75" font-size="10">(chunks)</text>
+          <rect x="270" y="42" width="100" height="40" rx="8" fill="#6d5ef0"/><text x="320" y="66">Embeddings</text>
+          <rect x="395" y="42" width="120" height="40" rx="8" fill="#4b3fd1"/><text x="455" y="61">Vector DB</text><text x="455" y="75" font-size="10">(guardar)</text>
+        </g>
+        <g stroke="var(--muted)" stroke-width="1.5" marker-end="url(#ar)">
+          <line x1="122" y1="62" x2="143" y2="62"/><line x1="247" y1="62" x2="268" y2="62"/><line x1="372" y1="62" x2="393" y2="62"/>
+        </g>
+        <text x="20" y="135" font-size="12" font-weight="700" fill="#0B72E7">FASE B · CONSULTA (cada pregunta, en vivo)</text>
+        <g font-size="12" fill="#fff" text-anchor="middle">
+          <rect x="20" y="150" width="95" height="40" rx="8" fill="#0B72E7"/><text x="67" y="174">Pregunta</text>
+          <rect x="140" y="150" width="95" height="40" rx="8" fill="#0B72E7"/><text x="187" y="174">Embedding</text>
+          <rect x="260" y="150" width="115" height="40" rx="8" fill="#4b3fd1"/><text x="317" y="169">Buscar en DB</text><text x="317" y="182" font-size="10">chunks similares</text>
+          <rect x="400" y="150" width="100" height="40" rx="8" fill="#0B72E7"/><text x="450" y="169">Prompt +</text><text x="450" y="182" font-size="10">contexto</text>
+          <rect x="525" y="150" width="75" height="40" rx="8" fill="#1aab5b"/><text x="562" y="169">LLM →</text><text x="562" y="182" font-size="10">respuesta</text>
+        </g>
+        <g stroke="var(--muted)" stroke-width="1.5" marker-end="url(#ar)">
+          <line x1="117" y1="170" x2="138" y2="170"/><line x1="237" y1="170" x2="258" y2="170"/><line x1="377" y1="170" x2="398" y2="170"/><line x1="502" y1="170" x2="523" y2="170"/>
+        </g>
+        <line x1="455" y1="84" x2="320" y2="148" stroke="#4b3fd1" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+        <text x="250" y="240" font-size="12" fill="var(--muted)">La Fase A se hace una sola vez. La Fase B se repite en cada consulta del usuario.</text>
+        <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--muted)"/></marker></defs>
+      </svg>
+    </div>
+
+    <h3 id="rag-paso1">Paso 1 · Trocear los documentos (chunking)</h3>
+    <p>No puedes meter un PDF de 500 páginas en un prompt: no cabe y es caro. Lo cortas en <b>chunks</b> de unos cientos de caracteres.</p>
+    <script type="text/python">
+# pip install langchain-text-splitters
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+texto = open("manual_acme.txt").read()
+
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=500,       # ~500 caracteres por trozo
+    chunk_overlap=50,     # solapamiento: evita cortar ideas a la mitad
+)
+chunks = splitter.split_text(texto)
+print(f"{len(chunks)} trozos generados")
+    </script>
+    <div class="callout warn"><span class="ci">⚠️</span><div><b>Por qué importa el <code class="inline">overlap</code>:</b> si una frase queda partida entre dos chunks, el solapamiento asegura que al menos uno la contenga completa. Empieza con <code class="inline">chunk_size=500, overlap=50</code> y ajusta según resultados.</div></div>
+
+    <h3 id="rag-paso2">Paso 2 · Guardar en una Vector Database</h3>
+    <p>Una <b>vector DB</b> almacena los embeddings y, dado un vector de consulta, devuelve los más cercanos en milisegundos (aunque tengas millones).</p>
+    <script type="text/python">
+# pip install chromadb sentence-transformers
+import chromadb
+from sentence_transformers import SentenceTransformer
+
+model = SentenceTransformer("all-MiniLM-L6-v2")
+db = chromadb.Client()
+coleccion = db.create_collection("manual_acme")
+
+coleccion.add(
+    documents=chunks,
+    embeddings=[model.encode(c).tolist() for c in chunks],
+    ids=[f"chunk_{i}" for i in range(len(chunks))],
+)
+    </script>
+    <table class="tbl">
+      <tr><th>Vector DB</th><th>Cuándo usarla</th></tr>
+      <tr><td><b>FAISS</b></td><td>Local, rapidísima, para prototipos / un solo proceso</td></tr>
+      <tr><td><b>Chroma</b></td><td>Local y simple, ideal para aprender (la usamos aquí)</td></tr>
+      <tr><td><b>Pinecone / Weaviate / Qdrant</b></td><td>Producción, en la nube, escalan a millones</td></tr>
+      <tr><td><b>pgvector</b></td><td>Ya usas PostgreSQL y quieres todo en un solo sitio</td></tr>
+    </table>
+
+    <h3 id="rag-paso3">Paso 3 · Recuperar (retrieval)</h3>
+    <script type="text/python">
+pregunta = "¿Cuántos días de vacaciones tengo?"
+
+resultados = coleccion.query(
+    query_embeddings=[model.encode(pregunta).tolist()],
+    n_results=3,          # los 3 chunks más relevantes
+)
+contexto = "\n\n".join(resultados["documents"][0])
+print(contexto)   # fragmentos del manual sobre vacaciones
+    </script>
+
+    <h3 id="rag-paso4">Paso 4 · Aumentar el prompt y generar</h3>
+    <script type="text/python">
+from openai import OpenAI
+client = OpenAI(api_key="sk-...")
+
+prompt = f"""Responde la pregunta usando SOLO el contexto.
+Si la respuesta no está en el contexto, di "No lo sé".
+
+Contexto:
+{contexto}
+
+Pregunta: {pregunta}
+"""
+
+respuesta = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": prompt}],
+)
+print(respuesta.choices[0].message.content)
+# → "Según la política de Acme, tienes 22 días hábiles al año."
+    </script>
+    <div class="callout good"><span class="ci">🎉</span><div><b>Eso es RAG completo: cuatro pasos.</b> La instrucción <i>"usa SOLO el contexto"</i> es clave: reduce las alucinaciones obligando al modelo a responder desde los fragmentos recuperados.</div></div>
+    <div class="callout tip"><span class="ci">🗓️</span><div><b>Nota de vigencia.</b> Los nombres de modelos cambian seguido (<code class="inline">gpt-4o-mini</code>, <code class="inline">text-embedding-3-small</code>…). Antes de copiar, verifica el nombre vigente en la documentación oficial del proveedor.</div></div>
+
+    <h3 id="rag-langchain">Lo mismo con LangChain (versión compacta)</h3>
+    <p>LangChain encadena estos pasos por ti. Útil cuando el proyecto crece.</p>
+    <script type="text/python">
+# pip install langchain langchain-openai langchain-community chromadb
+from langchain_community.vectorstores import Chroma
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain.chains import RetrievalQA
+
+store = Chroma.from_texts(chunks, OpenAIEmbeddings())
+
+qa = RetrievalQA.from_chain_type(
+    llm=ChatOpenAI(model="gpt-4o-mini"),
+    retriever=store.as_retriever(search_kwargs={"k": 3}),
+)
+print(qa.invoke("¿Cuántos días de vacaciones tengo?"))
+    </script>
+
+    <h3 id="rag-errores">⚠️ Errores típicos de RAG</h3>
+    <div class="callout bad"><span class="ci">⚠️</span><div><b>Chunks demasiado grandes</b> mezclan temas y confunden al modelo; <b>demasiado pequeños</b> pierden contexto. Empieza en ~500 caracteres y ajusta.</div></div>
+    <div class="callout bad"><span class="ci">⚠️</span><div><b>Olvidar el <code class="inline">overlap</code></b> parte frases a la mitad y el chunk correcto pierde sentido. Usa 10-15% de solapamiento.</div></div>
+    <div class="callout bad"><span class="ci">⚠️</span><div><b>No manejar "no está en los documentos".</b> Sin la instrucción <i>"si no está, di 'No lo sé'"</i>, el modelo rellenará el hueco inventando.</div></div>
+    <div class="callout bad"><span class="ci">⚠️</span><div><b>No re-indexar al cambiar los documentos.</b> Tu vector DB queda desactualizada y respondes con datos viejos.</div></div>
+
+    <div class="quiz" data-correct="0" data-explain="Si el retrieval no trae el fragmento correcto, el LLM nunca tendrá la información para responder bien. Por eso medir el retrieval (recall) es lo primero.">
+      <div class="q">En RAG, ¿qué pasa si el paso de <i>retrieval</i> trae chunks equivocados?</div>
+      <button class="opt">El LLM no podrá responder bien aunque sea muy bueno</button>
+      <button class="opt">No importa, el LLM lo arregla solo</button>
+      <button class="opt">El sistema deja de funcionar por completo</button>
+    </div>
+    <div class="quiz" data-correct="1" data-explain="El overlap (solapamiento) hace que una frase partida entre dos chunks aparezca completa en al menos uno, evitando perder contexto en los bordes.">
+      <div class="q">¿Para qué sirve el <code class="inline">chunk_overlap</code>?</div>
+      <button class="opt">Para que los chunks ocupen menos memoria</button>
+      <button class="opt">Para que una idea partida entre dos chunks quede completa en al menos uno</button>
+      <button class="opt">Para acelerar el embedding</button>
+    </div>
+
+    <h4>Verifica tu comprensión</h4>
+    <label class="check" data-id="rag1"><span class="box"></span><span class="txt">Entiendo las dos fases: ingesta (offline) y consulta (en vivo)</span></label>
+    <label class="check" data-id="rag2"><span class="box"></span><span class="txt">Sé qué es el chunking y por qué uso overlap</span></label>
+    <label class="check" data-id="rag3"><span class="box"></span><span class="txt">Entiendo el rol de la vector DB en el retrieval</span></label>
+    <label class="check" data-id="rag4"><span class="box"></span><span class="txt">Sé por qué "usa SOLO el contexto" reduce alucinaciones</span></label>
+  </section>
+
+  <!-- ===================== FINE-TUNING ===================== -->
+  <section class="page" id="page-finetuning">
+    <div class="page-head">
+      <span class="kicker">Técnica 2</span>
+      <h2 class="title">Fine-tuning paso a paso</h2>
+      <p class="lead">Tomar un modelo ya entrenado y seguir entrenándolo con <i>tus</i> ejemplos, para cambiar <b>cómo</b> responde: estilo, formato, tono, una tarea específica.</p>
+    </div>
+
+    <div class="toc"><b>En esta página</b>
+      <a href="#ft-cuando">¿Cuándo usarlo?</a>
+      <a href="#ft-dataset">El dataset</a>
+      <a href="#ft-openai">Ruta 1 · OpenAI</a>
+      <a href="#ft-lora">Ruta 2 · LoRA</a>
+      <a href="#ft-errores">⚠️ Errores típicos</a>
+    </div>
+
+    <h3 id="ft-cuando">Cuándo SÍ tiene sentido</h3>
+    <div class="grid c2">
+      <div class="card">
+        <h4 style="margin-top:0;color:var(--green)">✅ Úsalo cuando…</h4>
+        <p style="margin:0">Quieres un estilo/formato MUY consistente (siempre JSON, o el tono de tu marca). Una tarea repetitiva y acotada (clasificar tickets). Reducir el tamaño del prompt. Que un modelo pequeño imite a uno grande.</p>
+      </div>
+      <div class="card">
+        <h4 style="margin-top:0;color:var(--red)">❌ NO lo uses cuando…</h4>
+        <p style="margin:0">Solo quieres "que sepa mis datos" → eso es trabajo de RAG. Tus datos cambian a menudo → tendrías que reentrenar siempre. Tienes pocos ejemplos de baja calidad.</p>
+      </div>
+    </div>
+
+    <h3 id="ft-dataset">El ingrediente clave: el dataset</h3>
+    <p>Fine-tuning vive o muere por la calidad de los ejemplos. Necesitas pares <b>entrada → salida deseada</b>. <b>Calidad &gt; cantidad</b>: 50-100 ejemplos buenos superan a 1000 malos.</p>
+    <script type="text/python">
+# datos.jsonl  → un ejemplo JSON por línea (estándar en OpenAI y HuggingFace)
+{"messages": [{"role": "user", "content": "Pedido #123 no llegó"}, {"role": "assistant", "content": "Lamento el inconveniente. He localizado el pedido #123 y..."}]}
+{"messages": [{"role": "user", "content": "Quiero cambiar mi talla"}, {"role": "assistant", "content": "¡Claro! Para cambios de talla, el proceso es..."}]}
+    </script>
+
+    <h3 id="ft-openai">Ruta 1 · Fine-tuning gestionado (OpenAI)</h3>
+    <p>La forma más fácil: subes el archivo y ellos entrenan. No ves la máquina ni los pesos.</p>
+    <script type="text/python">
+from openai import OpenAI
+client = OpenAI(api_key="sk-...")
+
+# 1. Subir el dataset
+archivo = client.files.create(
+    file=open("datos.jsonl", "rb"),
+    purpose="fine-tune",
+)
+
+# 2. Lanzar el entrenamiento
+job = client.fine_tuning.jobs.create(
+    training_file=archivo.id,
+    model="gpt-4o-mini-2024-07-18",
+)
+
+# 3. Usar tu modelo personalizado igual que cualquier otro
+respuesta = client.chat.completions.create(
+    model="ft:gpt-4o-mini:tu-org:nombre:abc123",   # tu modelo
+    messages=[{"role": "user", "content": "Mi pedido no llegó"}],
+)
+    </script>
+
+    <div class="callout tip"><span class="ci">🗓️</span><div><b>Nota de vigencia.</b> El snapshot del modelo base (<code class="inline">gpt-4o-mini-2024-07-18</code>) y la API de <code class="inline">fine_tuning.jobs</code> cambian con el tiempo. Confirma el modelo y los parámetros vigentes en la documentación antes de lanzar el job.</div></div>
+
+    <h3 id="ft-lora">Ruta 2 · Open-source con LoRA (HuggingFace + PEFT)</h3>
+    <p>Aquí entrenas un modelo abierto (Llama, Mistral…) en tu propia máquina/GPU. El truco que lo hace viable se llama <b>LoRA</b>.</p>
+    <div class="diagram">
+      <svg viewBox="0 0 540 170" role="img" aria-label="Fine-tuning completo vs LoRA">
+        <rect x="1" y="1" width="538" height="168" rx="12" fill="none" stroke="var(--line)"/>
+        <text x="20" y="30" font-size="13" font-weight="700" fill="var(--ink)">Fine-tuning completo</text>
+        <rect x="20" y="42" width="230" height="26" rx="6" fill="#e4453a" opacity="0.85"/>
+        <text x="135" y="60" font-size="12" fill="#fff" text-anchor="middle">ajustas el 100% de los pesos</text>
+        <text x="20" y="92" font-size="11" fill="var(--muted)">→ mucha GPU, caro, lento</text>
+
+        <text x="20" y="125" font-size="13" font-weight="700" fill="var(--ink)">LoRA</text>
+        <rect x="20" y="135" width="24" height="22" rx="6" fill="#1aab5b"/>
+        <rect x="48" y="135" width="202" height="22" rx="6" fill="var(--line)"/>
+        <text x="260" y="151" font-size="12" fill="var(--muted)">ajustas &lt;1% (resto congelado) → cabe en 1 GPU 🔥</text>
+      </svg>
+    </div>
+    <script type="text/python">
+# pip install transformers peft datasets trl bitsandbytes
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from peft import LoraConfig
+from trl import SFTTrainer
+from datasets import load_dataset
+
+modelo_base = "mistralai/Mistral-7B-v0.1"
+tokenizer = AutoTokenizer.from_pretrained(modelo_base)
+model = AutoModelForCausalLM.from_pretrained(modelo_base, load_in_4bit=True)
+# load_in_4bit = comprime el modelo para que quepa en menos memoria (QLoRA)
+
+lora = LoraConfig(
+    r=16,                                  # "rango": tamaño de las matrices nuevas
+    lora_alpha=32,
+    target_modules=["q_proj", "v_proj"],   # qué capas adaptar
+    task_type="CAUSAL_LM",
+)
+
+datos = load_dataset("json", data_files="datos.jsonl", split="train")
+
+trainer = SFTTrainer(
+    model=model, train_dataset=datos,
+    peft_config=lora, tokenizer=tokenizer,
+)
+trainer.train()                 # aquí entrena
+trainer.save_model("./mi-modelo-lora")
+    </script>
+    <div class="callout tip"><span class="ci">💡</span><div><b>QLoRA</b> = LoRA + cuantización a 4 bits (<code class="inline">load_in_4bit</code>). Es lo que permite afinar un modelo de 7B en una sola GPU de consumo (16-24 GB).</div></div>
+
+    <table class="tbl">
+      <tr><th>Concepto</th><th>En una frase</th></tr>
+      <tr><td><b>PEFT</b></td><td>Familia de técnicas para entrenar pocos parámetros</td></tr>
+      <tr><td><b>LoRA</b></td><td>El método PEFT más usado: adaptadores pequeños</td></tr>
+      <tr><td><b>QLoRA</b></td><td>LoRA sobre un modelo comprimido a 4 bits (más barato aún)</td></tr>
+      <tr><td><b>SFT</b></td><td><i>Supervised Fine-Tuning</i>: enseñar con pares pregunta→respuesta</td></tr>
+    </table>
+
+    <h3 id="ft-errores">⚠️ Errores típicos de fine-tuning</h3>
+    <div class="callout bad"><span class="ci">⚠️</span><div><b>Usar fine-tuning para "que sepa mis datos".</b> Si los datos cambian, tu modelo queda obsoleto. Eso es trabajo de RAG, no de fine-tuning.</div></div>
+    <div class="callout bad"><span class="ci">⚠️</span><div><b>Dataset pequeño o sucio.</b> 30 ejemplos contradictorios enseñan al modelo a contradecirse. Prioriza 50-100 ejemplos limpios y consistentes.</div></div>
+    <div class="callout bad"><span class="ci">⚠️</span><div><b>No separar validación.</b> Sin un set aparte no sabrás si mejoró o si solo memorizó (overfitting).</div></div>
+    <div class="callout bad"><span class="ci">⚠️</span><div><b>JSONL malformado.</b> Una coma o comilla fuera de sitio y el job falla. Valida el archivo antes de subirlo.</div></div>
+
+    <div class="quiz" data-correct="1" data-explain="LoRA congela el modelo y entrena solo unas matrices pequeñas (<1% de los pesos), logrando calidad casi idéntica con muchísima menos GPU. QLoRA lo abarata aún más con cuantización a 4 bits.">
+      <div class="q">¿Para qué sirve LoRA en el fine-tuning open-source?</div>
+      <button class="opt">Para que el modelo aprenda más rápido a costa de calidad</button>
+      <button class="opt">Para entrenar solo una fracción mínima de parámetros y que quepa en una GPU modesta</button>
+      <button class="opt">Para conectar el modelo a una base de datos vectorial</button>
+    </div>
+    <div class="quiz" data-correct="2" data-explain="Si la información cambia con frecuencia, RAG es lo correcto: actualizas la base de datos sin reentrenar. Fine-tuning para datos cambiantes te obliga a reentrenar una y otra vez.">
+      <div class="q">Tienes catálogos de productos que cambian cada semana. ¿Qué NO deberías hacer?</div>
+      <button class="opt">Usar RAG sobre el catálogo actualizado</button>
+      <button class="opt">Re-indexar la vector DB al cambiar el catálogo</button>
+      <button class="opt">Hacer fine-tuning con el catálogo cada semana</button>
+    </div>
+
+    <h4>Verifica tu comprensión</h4>
+    <label class="check" data-id="ft1"><span class="box"></span><span class="txt">Sé cuándo fine-tuning es buena idea y cuándo NO</span></label>
+    <label class="check" data-id="ft2"><span class="box"></span><span class="txt">Entiendo el formato .jsonl de pares entrada→salida</span></label>
+    <label class="check" data-id="ft3"><span class="box"></span><span class="txt">Distingo entre PEFT, LoRA, QLoRA y SFT</span></label>
+    <label class="check" data-id="ft4"><span class="box"></span><span class="txt">Sé que calidad &gt; cantidad en los ejemplos</span></label>
+  </section>
+  <!-- ===================== COMPARATIVA ===================== -->
+  <section class="page" id="page-comparativa">
+    <div class="page-head">
+      <span class="kicker">Decisión</span>
+      <h2 class="title">RAG vs Fine-tuning</h2>
+      <p class="lead">La pregunta que todos hacen. La respuesta corta: casi nunca es "o uno u otro". Pero aquí tienes cómo decidir.</p>
+    </div>
+
+    <h3>La tabla de decisión</h3>
+    <table class="tbl">
+      <tr><th>Criterio</th><th>📚 RAG</th><th>🎛️ Fine-tuning</th></tr>
+      <tr><td><b>Para qué sirve</b></td><td>Darle <i>conocimiento</i> y datos frescos</td><td>Cambiar <i>comportamiento</i>, estilo, formato</td></tr>
+      <tr><td><b>Datos cambian seguido</b></td><td>✅ Ideal (solo actualizas la DB)</td><td>❌ Habría que reentrenar</td></tr>
+      <tr><td><b>Costo inicial</b></td><td>Bajo</td><td>Medio-alto</td></tr>
+      <tr><td><b>Costo por consulta</b></td><td>Algo mayor (prompt más largo)</td><td>Menor (prompt corto)</td></tr>
+      <tr><td><b>Tiempo de montaje</b></td><td>Horas</td><td>Días (datos + entreno + eval)</td></tr>
+      <tr><td><b>Riesgo de alucinación</b></td><td>Bajo (cita fuentes)</td><td>Mayor si los datos no estaban</td></tr>
+      <tr><td><b>Trazabilidad</b></td><td>✅ Sabes de qué documento salió</td><td>❌ Caja negra</td></tr>
+    </table>
+
+    <h3>Reglas mentales rápidas</h3>
+    <div class="flow">"Necesito que <span class="hl">SEPA</span> algo"               → <span class="gn">RAG</span>
+"Necesito que se <span class="hl">COMPORTE</span> así"        → <span class="bl">Fine-tuning</span>
+"Los datos cambian cada semana"          → <span class="gn">RAG</span>
+"Respuestas siempre en X formato"        → <span class="bl">Fine-tuning</span>
+"No estoy seguro"                        → <span class="gn">Empieza con RAG</span> (más barato y rápido)</div>
+
+    <h3>El secreto: casi siempre se combinan</h3>
+    <div class="diagram">
+      <svg viewBox="0 0 560 180" role="img" aria-label="RAG + Fine-tuning combinados">
+        <rect x="1" y="1" width="558" height="178" rx="12" fill="none" stroke="var(--line)"/>
+        <rect x="30" y="55" width="160" height="70" rx="10" fill="#0B72E7" opacity="0.9"/>
+        <text x="110" y="85" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Fine-tuning</text>
+        <text x="110" y="105" font-size="11" fill="#fff" text-anchor="middle">tono + formato de marca</text>
+        <text x="220" y="97" font-size="30" fill="var(--muted)" text-anchor="middle">+</text>
+        <rect x="250" y="55" width="160" height="70" rx="10" fill="#6d5ef0" opacity="0.9"/>
+        <text x="330" y="85" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">RAG</text>
+        <text x="330" y="105" font-size="11" fill="#fff" text-anchor="middle">datos actualizados</text>
+        <text x="430" y="97" font-size="26" fill="var(--muted)" text-anchor="middle">=</text>
+        <rect x="455" y="55" width="80" height="70" rx="10" fill="#1aab5b"/>
+        <text x="495" y="88" font-size="12" fill="#fff" text-anchor="middle" font-weight="700">Asistente</text>
+        <text x="495" y="104" font-size="10" fill="#fff" text-anchor="middle">completo</text>
+        <text x="280" y="155" font-size="12" fill="var(--muted)" text-anchor="middle">La personalidad correcta Y la información correcta.</text>
+      </svg>
+    </div>
+    <div class="callout good"><span class="ci">✅</span><div><b>El orden de la vida real:</b> empieza con <b>prompt engineering</b> → si no basta, añade <b>RAG</b> → si aún no basta, añade <b>fine-tuning</b>. De barato a caro, paso a paso.</div></div>
+
+    <div class="quiz" data-correct="0" data-explain="La información de productos cambia constantemente, así que RAG es lo natural. El fine-tuning se añade solo si necesitas un tono de marca muy específico.">
+      <div class="q">Para un chatbot de soporte cuyos productos cambian cada mes, ¿qué eliges primero?</div>
+      <button class="opt">RAG, porque los datos cambian seguido</button>
+      <button class="opt">Fine-tuning, porque es más potente</button>
+      <button class="opt">Ninguno, basta con un buen prompt</button>
+    </div>
+    <div class="quiz" data-correct="2" data-explain="El fine-tuning hornea el tono/estilo en el modelo, y RAG le inyecta los datos frescos en cada consulta. Juntos dan personalidad correcta + información correcta.">
+      <div class="q">¿Qué aporta cada técnica en un sistema combinado?</div>
+      <button class="opt">RAG da el tono; fine-tuning da los datos</button>
+      <button class="opt">Ambas hacen exactamente lo mismo</button>
+      <button class="opt">Fine-tuning da el tono/estilo; RAG da los datos actualizados</button>
+    </div>
+
+    <h4>Verifica tu comprensión</h4>
+    <label class="check" data-id="cmp1"><span class="box"></span><span class="txt">Sé asociar "saber" con RAG y "comportarse" con fine-tuning</span></label>
+    <label class="check" data-id="cmp2"><span class="box"></span><span class="txt">Entiendo por qué se suelen combinar ambas técnicas</span></label>
+    <label class="check" data-id="cmp3"><span class="box"></span><span class="txt">Recuerdo el orden: prompt → RAG → fine-tuning</span></label>
+  </section>
+
+  <!-- ===================== AGENTES ===================== -->
+  <section class="page" id="page-agentes">
+    <div class="page-head">
+      <span class="kicker">Avanzado</span>
+      <h2 class="title">Agentes y tool-calling</h2>
+      <p class="lead">Un LLM solo escribe texto. Un <b>agente</b> es un LLM al que le das <b>herramientas</b> (funciones) y la capacidad de decidir cuándo usarlas. Aquí RAG deja de ser un paso fijo y se convierte en una herramienta más que el modelo invoca cuando hace falta.</p>
+    </div>
+
+    <div class="toc"><b>En esta página</b>
+      <a href="#ag-idea">La idea</a>
+      <a href="#ag-tool">Tool-calling</a>
+      <a href="#ag-react">El bucle ReAct</a>
+      <a href="#ag-rag">RAG agéntico</a>
+      <a href="#ag-errores">⚠️ Errores típicos</a>
+    </div>
+
+    <h3 id="ag-idea">De "responder" a "actuar"</h3>
+    <p>En RAG clásico, <i>tú</i> decides el flujo: siempre buscas en la vector DB y luego generas. Un agente le da el control al modelo: ante una pregunta, <b>él decide</b> si buscar en documentos, llamar a una API, calcular algo, o responder directo.</p>
+    <table class="tbl">
+      <tr><th></th><th>RAG clásico</th><th>Agente</th></tr>
+      <tr><td><b>Quién decide el flujo</b></td><td>Tú (código fijo)</td><td>El modelo, paso a paso</td></tr>
+      <tr><td><b>Herramientas</b></td><td>Una: el retriever</td><td>Varias: búsqueda, APIs, cálculo…</td></tr>
+      <tr><td><b>Pasos por respuesta</b></td><td>Uno</td><td>Los que haga falta (bucle)</td></tr>
+      <tr><td><b>Coste/latencia</b></td><td>Predecible</td><td>Mayor y variable</td></tr>
+    </table>
+
+    <h3 id="ag-tool">Tool-calling (function calling)</h3>
+    <p>La pieza base: describes tus funciones al modelo y él responde con <i>cuál</i> llamar y con <i>qué</i> argumentos. Tú la ejecutas y le devuelves el resultado.</p>
+    <script type="text/python">
+from openai import OpenAI
+client = OpenAI(api_key="sk-...")
+
+# 1. Defines la herramienta (esquema que el modelo "ve")
+tools = [{
+    "type": "function",
+    "function": {
+        "name": "buscar_en_documentos",
+        "description": "Busca información en el manual interno de la empresa",
+        "parameters": {
+            "type": "object",
+            "properties": {"consulta": {"type": "string"}},
+            "required": ["consulta"],
+        },
+    },
+}]
+
+# 2. El modelo decide si usarla
+resp = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "¿Cuántos días de vacaciones tengo?"}],
+    tools=tools,
+)
+
+llamada = resp.choices[0].message.tool_calls[0]
+print(llamada.function.name)       # "buscar_en_documentos"
+print(llamada.function.arguments)  # '{"consulta": "días de vacaciones"}'
+    </script>
+    <div class="callout tip"><span class="ci">💡</span><div>El modelo <b>no ejecuta</b> la función: solo dice "quiero llamar a <code class="inline">buscar_en_documentos</code> con estos argumentos". Tú la ejecutas (p. ej. tu retriever de RAG) y le devuelves el resultado para que redacte la respuesta final.</div></div>
+
+    <h3 id="ag-react">El bucle ReAct (Reason + Act)</h3>
+    <p>Un agente repite un ciclo hasta resolver: <b>razona</b> qué hacer, <b>actúa</b> (llama una herramienta), <b>observa</b> el resultado, y vuelve a razonar. Así encadena varios pasos.</p>
+    <div class="diagram">
+      <svg viewBox="0 0 520 200" role="img" aria-label="Bucle ReAct">
+        <rect x="1" y="1" width="518" height="198" rx="12" fill="none" stroke="var(--line)"/>
+        <g font-size="12.5" fill="#fff" text-anchor="middle">
+          <rect x="40" y="80" width="110" height="44" rx="10" fill="#6d5ef0"/><text x="95" y="100">Razonar</text><text x="95" y="115" font-size="10">¿qué necesito?</text>
+          <rect x="205" y="80" width="110" height="44" rx="10" fill="#0B72E7"/><text x="260" y="100">Actuar</text><text x="260" y="115" font-size="10">llamar herramienta</text>
+          <rect x="370" y="80" width="110" height="44" rx="10" fill="#4b3fd1"/><text x="425" y="100">Observar</text><text x="425" y="115" font-size="10">leer resultado</text>
+        </g>
+        <g stroke="var(--muted)" stroke-width="1.5" marker-end="url(#ar2)">
+          <line x1="152" y1="102" x2="203" y2="102"/><line x1="317" y1="102" x2="368" y2="102"/>
+        </g>
+        <path d="M425 124 Q425 165 260 165 Q95 165 95 126" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ar2)"/>
+        <text x="260" y="182" font-size="11" fill="var(--muted)" text-anchor="middle">Repite hasta tener la respuesta final</text>
+        <defs><marker id="ar2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--muted)"/></marker></defs>
+      </svg>
+    </div>
+    <p>Frameworks como <b>LangGraph</b>, <b>LlamaIndex</b> o el <b>SDK de agentes de OpenAI</b> implementan este bucle por ti, incluyendo el manejo de errores y los límites de pasos.</p>
+    <script type="text/python">
+# Esbozo del bucle (lo que un framework hace por dentro)
+mensajes = [{"role": "user", "content": pregunta}]
+for _ in range(5):                      # límite de pasos: evita bucles infinitos
+    resp = client.chat.completions.create(
+        model="gpt-4o-mini", messages=mensajes, tools=tools)
+    msg = resp.choices[0].message
+    if not msg.tool_calls:              # el modelo ya tiene la respuesta
+        print(msg.content); break
+    for tc in msg.tool_calls:           # ejecutar lo que pidió
+        resultado = ejecutar(tc.function.name, tc.function.arguments)
+        mensajes.append({"role": "tool", "tool_call_id": tc.id,
+                         "content": resultado})
+    </script>
+
+    <h3 id="ag-rag">RAG agéntico: lo mejor de los dos mundos</h3>
+    <p>Cuando RAG es una <i>herramienta</i> del agente, ganas capacidades que el RAG fijo no tiene:</p>
+    <div class="grid c2">
+      <div class="card"><h4 style="margin-top:0">🔁 Multi-consulta</h4><p style="margin:0">Si la primera búsqueda no basta, el agente reformula y vuelve a buscar.</p></div>
+      <div class="card"><h4 style="margin-top:0">🧰 Varias fuentes</h4><p style="margin:0">Elige entre documentos, base de datos SQL o una API web según la pregunta.</p></div>
+      <div class="card"><h4 style="margin-top:0">🧮 Razonamiento</h4><p style="margin:0">Descompone preguntas complejas en sub-preguntas y combina resultados.</p></div>
+      <div class="card"><h4 style="margin-top:0">🚫 Saber cuándo NO buscar</h4><p style="margin:0">Para un "hola" no dispara el retriever: ahorra coste y latencia.</p></div>
+    </div>
+    <div class="callout warn"><span class="ci">⚖️</span><div><b>El coste de la flexibilidad:</b> un agente hace varias llamadas al LLM por respuesta, así que es <b>más lento y caro</b> y más difícil de depurar. Úsalo cuando el RAG de un solo paso se quede corto, no por defecto.</div></div>
+
+    <h3 id="ag-errores">⚠️ Errores típicos con agentes</h3>
+    <div class="callout bad"><span class="ci">⚠️</span><div><b>Sin límite de pasos.</b> Un agente puede entrar en bucle y quemar tokens. Pon siempre un máximo de iteraciones.</div></div>
+    <div class="callout bad"><span class="ci">⚠️</span><div><b>Descripciones de herramientas vagas.</b> Si la <code class="inline">description</code> es ambigua, el modelo elige mal la herramienta. Escríbelas con cuidado: son parte del prompt.</div></div>
+    <div class="callout bad"><span class="ci">⚠️</span><div><b>Dar herramientas peligrosas sin control.</b> Borrar archivos, enviar correos o gastar dinero requieren confirmación humana, no autonomía total.</div></div>
+
+    <div class="quiz" data-correct="1" data-explain="En tool-calling el modelo solo decide qué función llamar y con qué argumentos; la ejecución la haces tú en tu código. Eso te deja controlar seguridad y resultados.">
+      <div class="q">En tool-calling, ¿quién ejecuta realmente la función?</div>
+      <button class="opt">El propio LLM, de forma autónoma</button>
+      <button class="opt">Tu código: el modelo solo dice cuál llamar y con qué argumentos</button>
+      <button class="opt">La vector database</button>
+    </div>
+    <div class="quiz" data-correct="2" data-explain="El RAG agéntico brilla cuando hace falta reformular búsquedas, combinar fuentes o razonar en varios pasos. Para una pregunta simple de un solo documento, el RAG fijo es más barato y rápido.">
+      <div class="q">¿Cuándo conviene RAG agéntico en vez de RAG de un solo paso?</div>
+      <button class="opt">Siempre, es estrictamente mejor</button>
+      <button class="opt">Nunca, añade complejidad inútil</button>
+      <button class="opt">Cuando hay que reformular, combinar fuentes o razonar en varios pasos</button>
+    </div>
+
+    <h4>Verifica tu comprensión</h4>
+    <label class="check" data-id="ag1"><span class="box"></span><span class="txt">Entiendo la diferencia entre un LLM, RAG fijo y un agente</span></label>
+    <label class="check" data-id="ag2"><span class="box"></span><span class="txt">Sé cómo funciona el tool-calling (el modelo pide, yo ejecuto)</span></label>
+    <label class="check" data-id="ag3"><span class="box"></span><span class="txt">Puedo describir el bucle ReAct (razonar → actuar → observar)</span></label>
+    <label class="check" data-id="ag4"><span class="box"></span><span class="txt">Sé cuándo un agente vale la pena pese a su coste y latencia</span></label>
+  </section>
+
+  <!-- ===================== PROYECTO ===================== -->
+  <section class="page" id="page-proyecto">
+    <div class="page-head">
+      <span class="kicker">Proyecto · práctica</span>
+      <h2 class="title">Chatea con tus PDFs</h2>
+      <p class="lead">Un script ejecutable que ingiere un PDF y responde preguntas sobre él. Combina todo lo anterior. <b>Este es tu "Hola Mundo" de RAG: hazlo funcionar antes de seguir.</b></p>
+    </div>
+
+    <h3>Los 5 pasos del script</h3>
+    <div class="step"><div class="num">1</div><div class="st-body"><b>Leer el PDF</b> y extraer su texto.</div></div>
+    <div class="step"><div class="num">2</div><div class="st-body"><b>Trocear</b> en chunks con solapamiento.</div></div>
+    <div class="step"><div class="num">3</div><div class="st-body"><b>Indexar</b> los chunks en la vector DB (Chroma).</div></div>
+    <div class="step"><div class="num">4</div><div class="st-body"><b>Recuperar</b> los chunks relevantes y <b>generar</b> la respuesta.</div></div>
+    <div class="step"><div class="num">5</div><div class="st-body"><b>Bucle interactivo</b> para preguntar en la terminal.</div></div>
+
+    <h3>El código completo</h3>
+    <script type="text/python">
+# pip install pypdf chromadb sentence-transformers openai langchain-text-splitters
+import chromadb
+from pypdf import PdfReader
+from sentence_transformers import SentenceTransformer
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from openai import OpenAI
+
+# ── 1. Leer el PDF ───────────────────────────────────────────
+def leer_pdf(ruta):
+    reader = PdfReader(ruta)
+    return "\n".join(p.extract_text() for p in reader.pages)
+
+# ── 2. Trocear ───────────────────────────────────────────────
+def trocear(texto):
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=500, chunk_overlap=50)
+    return splitter.split_text(texto)
+
+# ── 3. Indexar en la vector DB ───────────────────────────────
+embed = SentenceTransformer("all-MiniLM-L6-v2")
+
+def indexar(chunks):
+    col = chromadb.Client().create_collection("docs")
+    col.add(
+        documents=chunks,
+        embeddings=[embed.encode(c).tolist() for c in chunks],
+        ids=[f"c{i}" for i in range(len(chunks))],
+    )
+    return col
+
+# ── 4. Responder ─────────────────────────────────────────────
+client = OpenAI(api_key="sk-...")
+
+def responder(col, pregunta):
+    res = col.query(
+        query_embeddings=[embed.encode(pregunta).tolist()],
+        n_results=3,
+    )
+    contexto = "\n\n".join(res["documents"][0])
+    prompt = (f"Usa SOLO este contexto. Si no está, di 'No lo sé'.\n\n"
+              f"Contexto:\n{contexto}\n\nPregunta: {pregunta}")
+    r = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return r.choices[0].message.content
+
+# ── 5. Ejecutar ──────────────────────────────────────────────
+if __name__ == "__main__":
+    texto = leer_pdf("mi_documento.pdf")
+    col = indexar(trocear(texto))
+    while True:
+        q = input("\n🧑 Tu pregunta (o 'salir'): ")
+        if q.lower() == "salir":
+            break
+        print("🤖", responder(col, q))
+    </script>
+    <div class="callout tip"><span class="ci">🛠️</span><div>Guárdalo como <code class="inline">chat_pdf.py</code>, pon tu API key, coloca un PDF al lado, y ejecuta <code class="inline">python chat_pdf.py</code>. Tendrás un asistente sobre cualquier documento.</div></div>
+    <div class="callout good"><span class="ci">📦</span><div><b>Starter reproducible.</b> Junto a esta guía tienes la carpeta <code class="inline">chat-pdf-starter/</code> con este <code class="inline">chat_pdf.py</code> listo, un <code class="inline">requirements.txt</code> con versiones fijadas y probadas, y un README. Solo: <code class="inline">pip install -r requirements.txt</code> y a correr.</div></div>
+
+    <details class="acc"><summary>💡 ¿Sin API key de OpenAI? Versión 100% local <span class="chev">›</span></summary>
+    <div class="acc-body">
+    <p>Reemplaza la función <code class="inline">responder</code> por un modelo local con HuggingFace (más lento, pero gratis y privado):</p>
+    <script type="text/python">
+from transformers import pipeline
+generador = pipeline("text-generation", model="Qwen/Qwen2.5-0.5B-Instruct")
+
+def responder(col, pregunta):
+    res = col.query(query_embeddings=[embed.encode(pregunta).tolist()], n_results=3)
+    contexto = "\n\n".join(res["documents"][0])
+    prompt = f"Contexto:\n{contexto}\n\nPregunta: {pregunta}\nRespuesta:"
+    return generador(prompt, max_new_tokens=200)[0]["generated_text"]
+    </script>
+    </div></details>
+
+    <h4>Tu checklist del proyecto</h4>
+    <label class="check" data-id="proy1"><span class="box"></span><span class="txt">Instalé las dependencias con pip</span></label>
+    <label class="check" data-id="proy2"><span class="box"></span><span class="txt">El script lee mi PDF y lo trocea sin error</span></label>
+    <label class="check" data-id="proy3"><span class="box"></span><span class="txt">Hice mi primera pregunta y obtuve respuesta basada en el PDF</span></label>
+    <label class="check" data-id="proy4"><span class="box"></span><span class="txt">Probé una pregunta cuya respuesta NO está en el PDF (dice "No lo sé")</span></label>
+  </section>
+
+  <!-- ===================== EVALUACIÓN ===================== -->
+  <section class="page" id="page-evaluacion">
+    <div class="page-head">
+      <span class="kicker">Producción</span>
+      <h2 class="title">Evaluación y producción</h2>
+      <p class="lead">El error #1 de principiante: montar RAG, ver que "más o menos responde", y darlo por terminado. En serio: hay que <b>medir</b>.</p>
+    </div>
+
+    <h3>Cómo saber si tu sistema es bueno</h3>
+    <div class="grid c2">
+      <div class="card">
+        <h4 style="margin-top:0">🔍 Retrieval</h4>
+        <p style="margin:0"><b>¿Encuentra los chunks correctos?</b> Mide <i>Recall@k</i>: ¿está el fragmento correcto entre los k recuperados? Si el retrieval falla, el LLM nunca podrá responder bien.</p>
+      </div>
+      <div class="card">
+        <h4 style="margin-top:0">✍️ Generación</h4>
+        <p style="margin:0"><b>¿La respuesta es correcta?</b> Mide <i>fidelidad</i> (¿se apoya en el contexto o inventa?) y <i>relevancia</i> (¿responde lo que se preguntó?).</p>
+      </div>
+    </div>
+    <div class="callout tip"><span class="ci">🧪</span><div><b>Herramientas:</b> <b>RAGAS</b> y <b>LangSmith</b> para evaluar RAG automáticamente; y un "golden set" propio (20+ preguntas con su respuesta esperada) que ejecutas en cada cambio.</div></div>
+
+    <h3>Problemas comunes y cómo arreglarlos</h3>
+    <table class="tbl">
+      <tr><th>Síntoma</th><th>Causa probable</th><th>Solución</th></tr>
+      <tr><td>Responde "No lo sé" demasiado</td><td>Chunks mal recuperados</td><td>Sube <code class="inline">n_results</code>, mejora el chunking</td></tr>
+      <tr><td>Inventa datos (alucina)</td><td>Contexto pobre o prompt débil</td><td>Refuerza "usa SOLO el contexto"</td></tr>
+      <tr><td>Respuestas lentas/caras</td><td>Prompt demasiado largo</td><td>Menos chunks, modelo más pequeño</td></tr>
+      <tr><td>Mezcla temas</td><td>Chunks muy grandes</td><td>Reduce <code class="inline">chunk_size</code></td></tr>
+      <tr><td>Fine-tune ignora ejemplos</td><td>Pocos datos o mala calidad</td><td>Más ejemplos, más limpios</td></tr>
+    </table>
+
+    <h3>Checklist antes de producción</h3>
+    <h4>RAG</h4>
+    <label class="check" data-id="ev1"><span class="box"></span><span class="txt">Pruebo con 20+ preguntas reales y mido aciertos</span></label>
+    <label class="check" data-id="ev2"><span class="box"></span><span class="txt">Manejo el caso "no está en los documentos"</span></label>
+    <label class="check" data-id="ev3"><span class="box"></span><span class="txt">Cito la fuente (qué documento/sección) en la respuesta</span></label>
+    <label class="check" data-id="ev4"><span class="box"></span><span class="txt">Re-indexo cuando los documentos cambian</span></label>
+    <label class="check" data-id="ev5"><span class="box"></span><span class="txt">Controlo costos (tamaño de prompt, modelo elegido)</span></label>
+    <h4>Fine-tuning</h4>
+    <label class="check" data-id="ev6"><span class="box"></span><span class="txt">Separé datos de entrenamiento y de validación</span></label>
+    <label class="check" data-id="ev7"><span class="box"></span><span class="txt">Verifiqué el formato del .jsonl (sin errores)</span></label>
+    <label class="check" data-id="ev8"><span class="box"></span><span class="txt">Comparé el modelo afinado vs el base con métricas</span></label>
+    <label class="check" data-id="ev9"><span class="box"></span><span class="txt">Documenté qué datos usé (para poder reentrenar)</span></label>
+  </section>
+  <!-- ===================== ROADMAP ===================== -->
+  <section class="page" id="page-roadmap">
+    <div class="page-head">
+      <span class="kicker">Planificación</span>
+      <h2 class="title">Roadmap y costos</h2>
+      <p class="lead">El plan semana a semana para pasar de cero a construir sistemas reales, más una idea de costos para presupuestar.</p>
+    </div>
+
+    <h3>Plan de aprendizaje sugerido</h3>
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-dot"></div>
+        <div class="tl-week">Semana 1</div><h4>Fundamentos</h4>
+        <p>Qué es un LLM y qué son los embeddings. Ejecuta el código de similitud coseno.</p>
+        <div class="chips"><span class="chip">PROYECTO: busca la frase más parecida en una lista de 10</span></div>
+      </div>
+      <div class="tl-item"><div class="tl-dot" style="border-color:var(--blue)"></div>
+        <div class="tl-week">Semana 2 · ⭐</div><h4>RAG básico</h4>
+        <p>Chunking + Chroma + retrieval. Haz funcionar <code class="inline">chat_pdf.py</code>.</p>
+        <div class="chips"><span class="chip">PROYECTO: chatea con un PDF tuyo</span></div>
+      </div>
+      <div class="tl-item"><div class="tl-dot"></div>
+        <div class="tl-week">Semana 3</div><h4>RAG sólido</h4>
+        <p>LangChain, prueba distintas vector DB, mide con un golden set.</p>
+        <div class="chips"><span class="chip">PROYECTO: añade citación de fuentes</span></div>
+      </div>
+      <div class="tl-item"><div class="tl-dot" style="border-color:var(--blue)"></div>
+        <div class="tl-week">Semana 4 · ⭐</div><h4>Fine-tuning</h4>
+        <p>Prepara un dataset .jsonl (50-100 ejemplos). Prueba primero OpenAI; luego LoRA/QLoRA si tienes GPU.</p>
+        <div class="chips"><span class="chip">PROYECTO: afina el tono de un asistente</span></div>
+      </div>
+      <div class="tl-item"><div class="tl-dot"></div>
+        <div class="tl-week">Semana 5+</div><h4>Sistemas combinados</h4>
+        <p>Fine-tune para el tono + RAG para los datos. Evaluación automática y despliegue.</p>
+        <div class="chips"><span class="chip">RAGAS</span><span class="chip">LangSmith</span><span class="chip">API + caché</span></div>
+      </div>
+    </div>
+
+    <h3>Idea de costos (aproximada, para ubicarte)</h3>
+    <table class="tbl">
+      <tr><th>Enfoque</th><th>Costo</th></tr>
+      <tr><td><b>RAG con APIs de pago</b></td><td>Embeddings: centavos por millón de tokens. Generación: el grueso, depende del modelo. Vector DB local (Chroma/FAISS): gratis.</td></tr>
+      <tr><td><b>RAG 100% local (HuggingFace)</b></td><td>Gratis en software; pagas la máquina/GPU/electricidad.</td></tr>
+      <tr><td><b>Fine-tuning gestionado (OpenAI)</b></td><td>Pagas entreno + un poco más por uso del modelo afinado.</td></tr>
+      <tr><td><b>Fine-tuning LoRA local</b></td><td>Gratis salvo la GPU (o alquilas una por horas).</td></tr>
+    </table>
+    <div class="callout warn"><span class="ci">⚠️</span><div>Los precios cambian seguido. Antes de presupuestar un proyecto, revisa las páginas oficiales de precios del proveedor que elijas.</div></div>
+
+    <div class="callout good"><span class="ci">🎓</span><div><b>Cuando termines:</b> construye un asistente sobre tu propia documentación, mídelo con un golden set, y combina fine-tuning (tono) + RAG (datos). Ese proyecto es portfolio de sobra.</div></div>
+  </section>
+
+  <!-- ===================== VOCABULARIO & FAQ ===================== -->
+  <section class="page" id="page-vocab">
+    <div class="page-head">
+      <span class="kicker">Referencia</span>
+      <h2 class="title">Vocabulario &amp; FAQ</h2>
+      <p class="lead">Todos los términos en un sitio, más las preguntas que todo el mundo hace. Repásalos como flashcards.</p>
+    </div>
+
+    <button class="fc-launch" id="fcLaunch">🎴 Estudiar con flashcards</button>
+
+    <h3>Glosario</h3>
+    <div class="card">
+      <div class="voc"><b>LLM</b><span>Modelo grande de lenguaje (GPT, Claude, Llama, Mistral…). Predice la siguiente palabra.</span></div>
+      <div class="voc"><b>Token</b><span>Unidad que el modelo procesa: trozos de palabra. Pagas y mides en tokens.</span></div>
+      <div class="voc"><b>Embedding</b><span>Texto convertido en un vector numérico que representa su significado.</span></div>
+      <div class="voc"><b>Similitud coseno</b><span>Métrica (de -1 a 1) que mide qué tan parecidos son dos vectores.</span></div>
+      <div class="voc"><b>Chunk</b><span>Trozo de un documento, de unos cientos de caracteres.</span></div>
+      <div class="voc"><b>Chunking</b><span>El proceso de cortar documentos en chunks, con solapamiento (overlap).</span></div>
+      <div class="voc"><b>Vector DB</b><span>Base de datos que busca por similitud de vectores (Chroma, FAISS, Pinecone, pgvector).</span></div>
+      <div class="voc"><b>RAG</b><span>Retrieval-Augmented Generation: recuperar contexto y generar la respuesta con él.</span></div>
+      <div class="voc"><b>Retrieval</b><span>La fase de "buscar" los chunks relevantes en RAG.</span></div>
+      <div class="voc"><b>Recall@k</b><span>Métrica de retrieval: ¿está el chunk correcto entre los k recuperados?</span></div>
+      <div class="voc"><b>Fine-tuning</b><span>Reentrenar un modelo con tus ejemplos para cambiar cómo responde.</span></div>
+      <div class="voc"><b>SFT</b><span>Supervised Fine-Tuning: entrenar con pares pregunta→respuesta.</span></div>
+      <div class="voc"><b>PEFT</b><span>Parameter-Efficient Fine-Tuning: entrenar solo pocos parámetros.</span></div>
+      <div class="voc"><b>LoRA</b><span>El método PEFT más usado: añade adaptadores pequeños y congela el resto.</span></div>
+      <div class="voc"><b>QLoRA</b><span>LoRA sobre un modelo comprimido a 4 bits. Cabe en una GPU de consumo.</span></div>
+      <div class="voc"><b>Alucinación</b><span>Información inventada por el modelo que suena convincente pero es falsa.</span></div>
+      <div class="voc"><b>Prompt</b><span>El texto de entrada que le das al modelo. RAG lo enriquece con contexto.</span></div>
+      <div class="voc"><b>Ventana de contexto</b><span>Límite de tokens que el modelo puede "ver" en una sola petición.</span></div>
+      <div class="voc"><b>.jsonl</b><span>Formato de dataset: un ejemplo JSON por línea. Estándar para fine-tuning.</span></div>
+      <div class="voc"><b>Agente</b><span>LLM con herramientas (funciones) que decide por sí mismo cuándo y cuáles usar.</span></div>
+      <div class="voc"><b>Tool-calling</b><span>Mecanismo por el que el modelo indica qué función llamar y con qué argumentos.</span></div>
+      <div class="voc"><b>ReAct</b><span>Bucle Reason+Act: razonar → actuar (herramienta) → observar, repetido hasta resolver.</span></div>
+      <div class="voc"><b>RAG agéntico</b><span>RAG usado como una herramienta del agente: puede reformular, combinar fuentes y razonar en pasos.</span></div>
+      <div class="voc"><b>MTEB</b><span>Ranking público que compara modelos de embeddings por calidad en muchas tareas.</span></div>
+    </div>
+
+    <h3>Preguntas Frecuentes</h3>
+    <details class="acc"><summary>¿Necesito una GPU para empezar? <span class="chev">›</span></summary>
+      <div class="acc-body"><p>No. RAG con embeddings locales pequeños (MiniLM) corre en CPU. Solo necesitas GPU para fine-tuning open-source serio.</p></div></details>
+    <details class="acc"><summary>¿RAG o fine-tuning para un chatbot de soporte? <span class="chev">›</span></summary>
+      <div class="acc-body"><p>Casi siempre RAG (la información de productos cambia). Añade fine-tuning solo si necesitas un tono de marca muy específico.</p></div></details>
+    <details class="acc"><summary>¿Cuántos ejemplos necesito para fine-tuning? <span class="chev">›</span></summary>
+      <div class="acc-body"><p>Empieza con 50-100 de alta calidad. Más no siempre es mejor; datos sucios empeoran el modelo.</p></div></details>
+    <details class="acc"><summary>¿Qué vector DB elijo? <span class="chev">›</span></summary>
+      <div class="acc-body"><p>Para aprender, Chroma o FAISS (locales). Para producción a escala, Pinecone/Qdrant/Weaviate, o pgvector si ya usas Postgres.</p></div></details>
+    <details class="acc"><summary>¿Qué son las "alucinaciones"? <span class="chev">›</span></summary>
+      <div class="acc-body"><p>Cuando el modelo inventa información que suena convincente pero es falsa. RAG las reduce porque obligas a responder desde el contexto.</p></div></details>
+    <details class="acc"><summary>¿Puedo combinar OpenAI + HuggingFace? <span class="chev">›</span></summary>
+      <div class="acc-body"><p>Sí, es muy común: RAG con embeddings de OpenAI y un modelo open-source afinado con LoRA para generar, o viceversa.</p></div></details>
+    <details class="acc"><summary>¿Por dónde empiezo si solo tengo una tarde? <span class="chev">›</span></summary>
+      <div class="acc-body"><p>Haz funcionar <code class="inline">chat_pdf.py</code> de la sección Proyecto. Es el "Hola Mundo" de RAG.</p></div></details>
+  </section>
+
+
+</div>
+
+<script>
+/* ===== Python syntax highlighter (offline, no deps) ===== */
+const KW=new Set(("def class return if elif else for while in is not and or import from as with try except finally raise yield lambda pass break continue global nonlocal assert del async await print None True False match case").split(" "));
+const BUILTIN=new Set(("len range open print str int float list dict set tuple bool enumerate zip map filter sum min max sorted input type super isinstance format join encode decode append").split(" "));
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function hi(raw){
+  const rx=/(#[^\n]*)|("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')|(@[A-Za-z_][\w.]*)|(\b\d[\d_]*\.?\d*\b)|([A-Za-z_]\w*)/g;
+  let out="",last=0,m;
+  while((m=rx.exec(raw))){
+    out+=esc(raw.slice(last,m.index));
+    if(m[1])out+='<span class="tok-c">'+esc(m[1])+'</span>';
+    else if(m[2])out+='<span class="tok-s">'+esc(m[2])+'</span>';
+    else if(m[3])out+='<span class="tok-a">'+esc(m[3])+'</span>';
+    else if(m[4])out+='<span class="tok-n">'+esc(m[4])+'</span>';
+    else if(m[5]){const w=m[5];
+      if(KW.has(w))out+='<span class="tok-k">'+w+'</span>';
+      else if(BUILTIN.has(w))out+='<span class="tok-b">'+w+'</span>';
+      else if(/^[A-Z]/.test(w))out+='<span class="tok-t">'+w+'</span>';
+      else out+=w;}
+    last=rx.lastIndex;
+  }
+  out+=esc(raw.slice(last));
+  return out;
+}
+function renderCode(){
+  document.querySelectorAll('script[type="text/python"]').forEach(s=>{
+    if(s.dataset.done)return; s.dataset.done=1;
+    let raw=s.textContent.replace(/^\n/,"").replace(/\s+$/,"");
+    const runnable=/\b(import|def |print\()/.test(raw) && !/^\s*\{/.test(raw) && !/load_in_4bit|SFTTrainer/.test(raw);
+    const runBtn=runnable?'<button class="run" title="Copia el código y abre un editor Python online">▶ Probar</button>':'';
+    const wrap=document.createElement('div');wrap.className='snippet';
+    wrap.innerHTML=runBtn+'<button class="copy">Copiar</button><pre><code>'+hi(raw)+'</code></pre>';
+    const btn=wrap.querySelector('.copy');
+    btn.addEventListener('click',()=>{navigator.clipboard.writeText(raw).then(()=>{
+      btn.textContent='¡Copiado!';btn.classList.add('done');
+      setTimeout(()=>{btn.textContent='Copiar';btn.classList.remove('done')},1400);});});
+    const rb=wrap.querySelector('.run');
+    if(rb)rb.addEventListener('click',()=>{
+      navigator.clipboard.writeText(raw).catch(()=>{});
+      rb.textContent='Código copiado ✓';
+      window.open('https://www.online-python.com','_blank','noopener');
+      setTimeout(()=>{rb.textContent='▶ Probar'},1800);
+    });
+    s.replaceWith(wrap);
+  });
+}
+
+/* ===== Navigation ===== */
+function go(id,target){
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('show',p.id==='page-'+id));
+  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('active',a.dataset.go===id));
+  document.getElementById('sidebar').classList.remove('open');
+  localStorage.setItem('rag_page',id);
+  if(target){requestAnimationFrame(()=>reveal(target));}
+  else{window.scrollTo({top:0,behavior:'instant'});}
+}
+function reveal(el){
+  if(typeof el==='string')el=document.querySelector(el);
+  if(!el)return;
+  let d=el.closest('details');while(d){d.open=true;d=d.parentElement.closest('details');}
+  el.scrollIntoView({behavior:'smooth',block:'center'});
+  el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');
+}
+document.getElementById('nav').addEventListener('click',e=>{const a=e.target.closest('a[data-go]');if(a)go(a.dataset.go);});
+document.addEventListener('click',e=>{const j=e.target.closest('[data-jump]');if(j){go(j.dataset.jump);}});
+document.getElementById('menuBtn')?.addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));
+
+/* ===== Checklist persistence ===== */
+function loadChecks(){
+  let saved={};try{saved=JSON.parse(localStorage.getItem('rag_checks')||'{}')}catch(e){}
+  document.querySelectorAll('.check').forEach(c=>{
+    const id=c.dataset.id;if(saved[id]){c.classList.add('done');c.querySelector('.box').textContent='✓';}
+    c.addEventListener('click',()=>{
+      c.classList.toggle('done');
+      c.querySelector('.box').textContent=c.classList.contains('done')?'✓':'';
+      let s={};try{s=JSON.parse(localStorage.getItem('rag_checks')||'{}')}catch(e){}
+      if(c.classList.contains('done'))s[id]=1;else delete s[id];
+      localStorage.setItem('rag_checks',JSON.stringify(s));
+      updateProgress();
+    });
+  });
+}
+function setupNavBadges(){
+  document.querySelectorAll('#nav a[data-go]').forEach(a=>{
+    if(!a.querySelector('.navpct')){const s=document.createElement('span');s.className='navpct';a.appendChild(s);}
+  });
+}
+function updateProgress(){
+  const all=document.querySelectorAll('.check');
+  const done=document.querySelectorAll('.check.done').length;
+  const pct=all.length?Math.round(done/all.length*100):0;
+  document.getElementById('globalBar').style.width=pct+'%';
+  document.getElementById('globalPct').textContent=pct+'% completado ('+done+'/'+all.length+')';
+  document.querySelectorAll('#nav a[data-go]').forEach(a=>{
+    const pg=document.getElementById('page-'+a.dataset.go);const badge=a.querySelector('.navpct');
+    if(!pg||!badge)return;
+    const t=pg.querySelectorAll('.check').length;
+    if(!t){badge.style.display='none';return;}
+    const d=pg.querySelectorAll('.check.done').length;
+    badge.style.display='';badge.textContent=Math.round(d/t*100)+'%';
+    badge.classList.toggle('full',d===t);
+  });
+}
+function initQuizzes(){
+  document.querySelectorAll('.quiz').forEach(q=>{
+    const correct=+q.dataset.correct;
+    const fb=document.createElement('div');fb.className='qfb';q.appendChild(fb);
+    const opts=[...q.querySelectorAll('.opt')];
+    opts.forEach((opt,i)=>{
+      opt.setAttribute('type','button');
+      opt.addEventListener('click',()=>{
+        if(q.dataset.answered)return;q.dataset.answered=1;
+        opts.forEach(o=>o.disabled=true);
+        opts[correct].classList.add('correct');
+        const ex=q.dataset.explain||'';
+        if(i===correct){fb.className='qfb ok show';fb.innerHTML='✅ ¡Correcto! '+ex;}
+        else{opt.classList.add('wrong');fb.className='qfb no show';fb.innerHTML='❌ No exactamente. '+ex;}
+      });
+    });
+  });
+}
+function initFlashcards(){
+  const launch=document.getElementById('fcLaunch');if(!launch)return;
+  const ov=document.getElementById('fcOverlay'),card=document.getElementById('fcCard'),
+    face=document.getElementById('fcFace'),counter=document.getElementById('fcCounter');
+  let deck=[],idx=0,flipped=false;
+  const render=()=>{const c=deck[idx];flipped=false;face.className='fc-term';face.textContent=c.t;counter.textContent=(idx+1)+' / '+deck.length;};
+  const flip=()=>{flipped=!flipped;const c=deck[idx];if(flipped){face.className='fc-def';face.textContent=c.d;}else{face.className='fc-term';face.textContent=c.t;}};
+  const next=()=>{idx=(idx+1)%deck.length;render();};
+  const prev=()=>{idx=(idx-1+deck.length)%deck.length;render();};
+  const close=()=>ov.classList.remove('show');
+  launch.addEventListener('click',()=>{
+    deck=[...document.querySelectorAll('#page-vocab .voc')].map(v=>({t:v.querySelector('b').textContent,d:v.querySelector('span').textContent}));
+    if(!deck.length)return;idx=0;render();ov.classList.add('show');
+  });
+  document.getElementById('fcClose').addEventListener('click',close);
+  ov.addEventListener('click',e=>{if(e.target===ov)close();});
+  card.addEventListener('click',flip);
+  document.getElementById('fcNext').addEventListener('click',next);
+  document.getElementById('fcPrev').addEventListener('click',prev);
+  document.getElementById('fcShuffle').addEventListener('click',()=>{for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}idx=0;render();});
+  document.addEventListener('keydown',e=>{if(!ov.classList.contains('show'))return;
+    if(e.key==='Escape')close();else if(e.key==='ArrowRight')next();else if(e.key==='ArrowLeft')prev();
+    else if(e.key===' '){e.preventDefault();flip();}});
+}
+function initIO(){
+  document.getElementById('exportBtn').addEventListener('click',()=>{
+    const data={checks:localStorage.getItem('rag_checks')||'{}',theme:localStorage.getItem('rag_theme')||'light'};
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='progreso-rag.json';a.click();URL.revokeObjectURL(a.href);
+  });
+  const file=document.getElementById('importFile');
+  document.getElementById('importBtn').addEventListener('click',()=>file.click());
+  file.addEventListener('change',()=>{
+    const f=file.files[0];if(!f)return;const reader=new FileReader();
+    reader.onload=()=>{try{const d=JSON.parse(reader.result);
+      if(d.checks)localStorage.setItem('rag_checks',d.checks);
+      if(d.theme)localStorage.setItem('rag_theme',d.theme);
+      location.reload();
+    }catch(e){alert('Archivo de progreso no válido');}};
+    reader.readAsText(f);
+  });
+}
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  if(confirm('¿Reiniciar todo tu progreso de estudio?')){
+    localStorage.removeItem('rag_checks');
+    document.querySelectorAll('.check.done').forEach(c=>{c.classList.remove('done');c.querySelector('.box').textContent='';});
+    updateProgress();
+  }
+});
+
+/* ===== Global search ===== */
+const PAGE_LABEL={home:'Inicio',fundamentos:'¿Qué es un LLM?',embeddings:'Embeddings',
+  rag:'RAG paso a paso',finetuning:'Fine-tuning',comparativa:'RAG vs Fine-tuning',
+  agentes:'Agentes y tool-calling',
+  proyecto:'Proyecto · chat PDFs',evaluacion:'Evaluación',roadmap:'Roadmap',vocab:'Vocabulario & FAQ'};
+let INDEX=[];
+function norm(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function esc2(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function buildIndex(){
+  INDEX=[];
+  document.querySelectorAll('.page').forEach(pg=>{
+    const page=pg.id.replace('page-','');
+    pg.querySelectorAll('h2.title,h3,h4,.acc>summary,.check .txt,.module-card b,.voc b').forEach(el=>{
+      const text=el.textContent.trim().replace(/\s*›\s*$/,'');
+      if(text.length<2)return;
+      if(!el.id){el.id='s'+(INDEX.length)+'_'+page;}
+      INDEX.push({page,id:el.id,text,n:norm(text),kind:'h'});
+    });
+    pg.querySelectorAll('p, .voc span, .callout>div, .snippet pre, .quiz .q').forEach(el=>{
+      const text=el.textContent.replace(/\s+/g,' ').trim();
+      if(text.length<8)return;
+      if(!el.id){el.id='c'+(INDEX.length)+'_'+page;}
+      INDEX.push({page,id:el.id,text,n:norm(text),kind:'c'});
+    });
+  });
+}
+function snip(text,q){
+  const n=norm(text);let i=n.indexOf(q);if(i<0)i=0;
+  const start=Math.max(0,i-32),end=Math.min(text.length,i+q.length+52);
+  return (start>0?'…':'')+text.slice(start,end)+(end<text.length?'…':'');
+}
+function highlight(text,q){
+  const i=norm(text).indexOf(q);
+  if(i<0)return esc2(text);
+  return esc2(text.slice(0,i))+'<mark class="hl-find">'+esc2(text.slice(i,i+q.length))+'</mark>'+esc2(text.slice(i+q.length));
+}
+const searchInput=document.getElementById('searchInput');
+const resultsBox=document.getElementById('results');
+let selIdx=-1,curResults=[];
+function runSearch(){
+  const raw=searchInput.value.trim();const q=norm(raw);
+  if(q.length<2){resultsBox.classList.remove('show');resultsBox.innerHTML='';curResults=[];return;}
+  curResults=INDEX.filter(r=>r.n.includes(q));
+  curResults.sort((a,b)=>(a.kind===b.kind)?0:(a.kind==='h'?-1:1));
+  curResults=curResults.slice(0,25);
+  selIdx=-1;
+  if(!curResults.length){
+    resultsBox.innerHTML='<div class="empty">Sin resultados para "'+raw.replace(/</g,'&lt;')+'"</div>';
+    resultsBox.classList.add('show');return;
+  }
+  resultsBox.innerHTML=curResults.map((r,i)=>{
+    const disp=r.kind==='h'?highlight(r.text,q):highlight(snip(r.text,q),q);
+    return '<button class="r" data-i="'+i+'"><b>'+disp+'</b><small>'+PAGE_LABEL[r.page]+(r.kind==='c'?' · en el texto':'')+'</small></button>';
+  }).join('');
+  resultsBox.classList.add('show');
+}
+function openResult(r){
+  searchInput.value='';resultsBox.classList.remove('show');resultsBox.innerHTML='';
+  go(r.page,'#'+CSS.escape(r.id));
+}
+searchInput.addEventListener('input',runSearch);
+resultsBox.addEventListener('click',e=>{const b=e.target.closest('.r');if(b)openResult(curResults[+b.dataset.i]);});
+searchInput.addEventListener('keydown',e=>{
+  if(!curResults.length)return;
+  if(e.key==='ArrowDown'){e.preventDefault();selIdx=Math.min(selIdx+1,curResults.length-1);}
+  else if(e.key==='ArrowUp'){e.preventDefault();selIdx=Math.max(selIdx-1,0);}
+  else if(e.key==='Enter'){e.preventDefault();openResult(curResults[selIdx<0?0:selIdx]);return;}
+  else if(e.key==='Escape'){searchInput.value='';runSearch();return;}
+  resultsBox.querySelectorAll('.r').forEach((el,i)=>el.classList.toggle('sel',i===selIdx));
+  const sel=resultsBox.querySelector('.r.sel');if(sel)sel.scrollIntoView({block:'nearest'});
+});
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.search')&&!e.target.closest('#results'))resultsBox.classList.remove('show');
+});
+
+/* ===== Theme ===== */
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('themeIcon').textContent=t==='dark'?'☀️':'🌙';
+  document.getElementById('themeLabel').textContent=t==='dark'?'Modo claro':'Modo oscuro';
+  localStorage.setItem('rag_theme',t);
+}
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
+});
+
+/* ===== Print: abrir desplegables y mostrar todo ===== */
+window.addEventListener('beforeprint',()=>{
+  document.querySelectorAll('details:not([open])').forEach(d=>{d.dataset.wasClosed='1';d.open=true;});
+});
+window.addEventListener('afterprint',()=>{
+  document.querySelectorAll('details[data-was-closed]').forEach(d=>{d.open=false;delete d.dataset.wasClosed;});
+});
+
+/* ===== Init ===== */
+renderCode();loadChecks();setupNavBadges();initQuizzes();initFlashcards();initIO();
+buildIndex();updateProgress();
+applyTheme(localStorage.getItem('rag_theme')||'light');
+go(localStorage.getItem('rag_page')||'home');
+</script>
+
+</body>
+</html>

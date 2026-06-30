@@ -159,54 +159,6 @@ ul.clean li b{color:var(--txt)}
   .layer{flex-direction:column;align-items:flex-start;gap:4px}
 }
 .progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--acc),var(--acc2));z-index:99;width:0}
-
-/* Light theme */
-html[data-theme="light"]{
-  --bg:#f6f7fb; --bg2:#eceff5; --panel:#ffffff; --panel2:#f0f2f8;
-  --line:#e1e5ee; --txt:#1b1e28; --mut:#576070; --dim:#8b92a4;
-  --shadow:0 1px 3px rgba(20,30,60,.06);
-}
-html[data-theme="light"] .hero{background:
-  radial-gradient(900px 380px at 12% -8%,rgba(124,140,255,.12),transparent 60%),
-  radial-gradient(700px 340px at 92% 0%,rgba(86,212,192,.10),transparent 55%)}
-
-/* Nav controls: search + buttons */
-.navctl{margin:2px 0 16px;padding:0 4px}
-.navsearch{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px 11px;color:var(--txt);font-size:13px;font-family:inherit;outline:none}
-.navsearch:focus{border-color:var(--acc)}
-.qres{margin-top:6px;display:none;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:9px;overflow:hidden;max-height:300px;overflow-y:auto}
-.qres.show{display:flex}
-.qres a{padding:8px 11px;font-size:12.5px;color:var(--mut);border-bottom:1px solid var(--line)}
-.qres a:hover{background:var(--panel2);color:var(--txt);text-decoration:none}
-.qres a:last-child{border-bottom:none}
-.qres a b{color:var(--txt)}
-.qres .none{padding:9px 11px;font-size:12px;color:var(--dim)}
-.navbtns{display:flex;gap:6px;margin-top:8px}
-.navbtns button{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:7px;color:var(--mut);font-size:12px;cursor:pointer;font-family:inherit;transition:.15s}
-.navbtns button:hover{background:var(--panel2);color:var(--txt)}
-
-/* Quiz */
-.quiz{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin:22px 0}
-.quiz .qq{font-weight:700;font-size:14.5px;margin-bottom:12px}
-.quiz button.opt{display:block;width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:7px 0;color:var(--txt);font-size:13.5px;cursor:pointer;font-family:inherit;transition:.15s}
-.quiz button.opt:hover:not(:disabled){border-color:var(--acc)}
-.quiz button.opt:disabled{cursor:default}
-.quiz button.opt.correct{border-color:var(--grn);background:rgba(95,208,122,.13)}
-.quiz button.opt.wrong{border-color:var(--pink);background:rgba(224,122,181,.13)}
-.quiz .fb{margin-top:10px;font-size:13.5px;color:var(--mut);display:none;border-left:3px solid var(--grn);padding:8px 12px;background:var(--panel2);border-radius:0 8px 8px 0}
-.quiz .fb.show{display:block}
-
-@media print{
-  nav,.progress,.navctl{display:none!important}
-  .wrap{display:block}
-  main{padding:0}
-  section{padding:22px 0;border:none;break-inside:avoid}
-  .tabpane{display:block!important}
-  .toggle-body{display:block!important}
-  pre{white-space:pre-wrap;border:1px solid #ccc}
-  a{color:inherit;text-decoration:none}
-  body{background:#fff;color:#000}
-}
 </style>
 </head>
 <body>
@@ -217,25 +169,12 @@ html[data-theme="light"] .hero{background:
 <nav>
   <div class="brand">IA <span>Agéntica</span></div>
   <div class="sub">Guía técnica interactiva</div>
-  <div class="navctl">
-    <input id="q" class="navsearch" type="text" placeholder="🔎 Buscar tema…" autocomplete="off">
-    <div id="qres" class="qres"></div>
-    <div class="navbtns">
-      <button id="themeBtn" title="Cambiar tema">🌙 Tema</button>
-      <button id="pdfBtn" title="Imprimir o guardar PDF">📄 PDF</button>
-    </div>
-  </div>
   <div class="grp">Fundamentos</div>
   <a href="#intro">¿Qué es un agente?</a>
   <a href="#loop">El loop agéntico</a>
   <a href="#anatomia">Anatomía de un agente</a>
   <a href="#tools">Tools & function calling</a>
   <a href="#context">Context engineering</a>
-  <div class="grp">Conocimiento & adaptación</div>
-  <a href="#rag">RAG</a>
-  <a href="#finetuning">Fine-tuning</a>
-  <a href="#rag-vs-ft">RAG vs Fine-tuning</a>
-  <a href="#rag-agentico">RAG agéntico</a>
   <div class="grp">Protocolos & extensión</div>
   <a href="#mcp">MCP</a>
   <a href="#skills">Skills</a>
@@ -247,38 +186,21 @@ html[data-theme="light"] .hero{background:
   <a href="#comparativa">Comparativa</a>
   <div class="grp">Práctica</div>
   <a href="#patrones">Patrones agénticos</a>
-  <a href="#evaluacion">Evaluación</a>
   <a href="#glosario">Glosario</a>
 </nav>
 
 <main>
 <header class="hero">
   <h1>Entender el trabajo<br><span class="g">agéntico, subagéntico</span> e IA</h1>
-  <p>Una guía completa y técnica del ecosistema: cómo razonan los agentes, cómo darles conocimiento con RAG y adaptarlos con fine-tuning, qué son MCP, Skills y subagentes, y cómo funcionan Claude Code, Codex y OpenCode.</p>
+  <p>Una guía completa y técnica del ecosistema: cómo razonan los agentes, qué son MCP, Skills y subagentes, y cómo funcionan Claude Code, Codex y OpenCode bajo el capó.</p>
   <div class="pills">
-    <span class="pill"><b>19</b> secciones</span>
-    <span class="pill"><b>RAG</b> · Fine-tuning</span>
+    <span class="pill"><b>13</b> secciones</span>
     <span class="pill"><b>Loop</b> agéntico</span>
     <span class="pill"><b>MCP</b> · Skills · Subagentes</span>
     <span class="pill">Claude Code · Codex · OpenCode</span>
     <span class="pill">Actualizado <b>2026</b></span>
   </div>
 </header>
-
-<!-- MAPA DE LA GUÍA -->
-<section id="mapa" style="background:var(--bg2)">
-  <div class="eyebrow">Mapa de la guía</div>
-  <h2>Cinco bloques, una sola lectura</h2>
-  <p>De los fundamentos del agente a cómo darle conocimiento, adaptarlo, extenderlo y llevarlo a producción. Salta a lo que necesites.</p>
-  <div class="grid g3">
-    <a class="card" href="#intro"><div class="ic">🤖</div><h4>Fundamentos</h4><p>Qué es un agente, el loop, anatomía, tools y context engineering.</p></a>
-    <a class="card hl" href="#rag"><div class="ic">🧠</div><h4>Conocimiento &amp; adaptación</h4><p>RAG, fine-tuning, cuándo cada uno y RAG agéntico.</p></a>
-    <a class="card" href="#mcp"><div class="ic">🔌</div><h4>Protocolos &amp; extensión</h4><p>MCP, Skills y subagentes para ampliar lo que el agente puede hacer.</p></a>
-    <a class="card" href="#claudecode"><div class="ic">🛠️</div><h4>Herramientas</h4><p>Claude Code, Codex, OpenCode y su comparativa.</p></a>
-    <a class="card" href="#patrones"><div class="ic">🧩</div><h4>Práctica</h4><p>Patrones agénticos, evaluación y glosario de referencia.</p></a>
-    <a class="card" href="Tutorial-RAG-FineTuning-Visual.html"><div class="ic">📘</div><h4>Tutorial visual</h4><p>Profundización en RAG y fine-tuning con quizzes, flashcards y proyecto.</p></a>
-  </div>
-</section>
 
 <!-- 1 INTRO -->
 <section id="intro">
@@ -430,7 +352,7 @@ mensajes = [system_prompt, objetivo_usuario]
   <h3>Las cuatro tácticas fundamentales</h3>
   <div class="grid g2">
     <div class="card"><div class="ic">✍️</div><h4>Write — escribir fuera</h4><p>Guardar info en archivos/memoria externa (un <code>scratchpad</code>, notas) en vez de mantenerlo todo en la ventana.</p></div>
-    <div class="card"><div class="ic">🎯</div><h4>Select — seleccionar</h4><p>Traer a la ventana solo lo relevante ahora (<a href="#rag">retrieval, RAG</a>, leer el archivo correcto justo a tiempo).</p></div>
+    <div class="card"><div class="ic">🎯</div><h4>Select — seleccionar</h4><p>Traer a la ventana solo lo relevante ahora (retrieval, RAG, leer el archivo correcto justo a tiempo).</p></div>
     <div class="card"><div class="ic">🗜️</div><h4>Compress — comprimir</h4><p>Resumir el historial viejo o los resultados largos para liberar tokens sin perder lo esencial.</p></div>
     <div class="card"><div class="ic">🧩</div><h4>Isolate — aislar</h4><p>Repartir el trabajo entre <b>subagentes</b>, cada uno con su propia ventana limpia y enfocada.</p></div>
   </div>
@@ -444,251 +366,9 @@ mensajes = [system_prompt, objetivo_usuario]
   <p>Como el modelo olvida entre sesiones, las herramientas usan archivos convencionales que se cargan al inicio: <code>CLAUDE.md</code> (Claude Code), <code>AGENTS.md</code> (Codex, OpenCode y estándar emergente), reglas de proyecto. Son la "memoria a largo plazo" del agente sobre tu proyecto: estilo de código, comandos, convenciones.</p>
 </section>
 
-<!-- 6 RAG -->
-<section id="rag">
-  <div class="eyebrow"><span class="n">6</span> Conocimiento & adaptación</div>
-  <h2>RAG — darle conocimiento al agente</h2>
-  <p class="lead"><b>RAG</b> (Retrieval-Augmented Generation) es la táctica <em>Select</em> del context engineering llevada a escala: ante una pregunta, recuperas los fragmentos relevantes de tus documentos y los inyectas en la ventana del modelo justo antes de responder. Es como darle al agente un libro abierto en la página correcta.</p>
-
-  <h3>Por qué un agente lo necesita</h3>
-  <p>El conocimiento de un LLM está <b>congelado</b> en su entrenamiento: no conoce tus documentos internos ni lo que pasó ayer. RAG lo resuelve sin reentrenar: la información vive en una base de datos que actualizas cuando quieras.</p>
-
-  <div class="loop">
-    <div class="node s1"><div class="t">❓ Pregunta</div><div class="d">del usuario</div></div>
-    <div class="arr">→</div>
-    <div class="node s2"><div class="t">🔢 Embedding</div><div class="d">texto → vector</div></div>
-    <div class="arr">→</div>
-    <div class="node s3"><div class="t">🔎 Retrieval</div><div class="d">vector DB</div></div>
-    <div class="arr">→</div>
-    <div class="node s4"><div class="t">🧩 Prompt + contexto</div><div class="d">aumentar</div></div>
-    <div class="arr">→</div>
-    <div class="node s2"><div class="t">💬 LLM</div><div class="d">responde</div></div>
-  </div>
-
-  <h3>Las dos fases</h3>
-  <div class="grid g2">
-    <div class="card"><div class="ic">📥</div><h4>Ingesta (offline, una vez)</h4><p>Trocear los documentos en <b>chunks</b> → generar sus <b>embeddings</b> → guardarlos en una <b>vector DB</b>.</p></div>
-    <div class="card"><div class="ic">⚡</div><h4>Consulta (online, cada pregunta)</h4><p>Embedding de la pregunta → buscar chunks similares → construir el prompt con ese contexto → generar.</p></div>
-  </div>
-
-  <h3>Embeddings: buscar por significado</h3>
-  <p>Un <b>embedding</b> convierte texto en un vector que representa su significado. Textos parecidos quedan cerca, así "sueldo" encuentra "remuneración" aunque no compartan letras. Esa búsqueda por significado es lo que hace RAG posible.</p>
-
-  <h3>El pipeline en código</h3>
-  <pre><code><span class="c-com"># pip install chromadb sentence-transformers openai langchain-text-splitters</span>
-<span class="c-key">import</span> chromadb
-<span class="c-key">from</span> sentence_transformers <span class="c-key">import</span> SentenceTransformer
-<span class="c-key">from</span> langchain_text_splitters <span class="c-key">import</span> RecursiveCharacterTextSplitter
-<span class="c-key">from</span> openai <span class="c-key">import</span> OpenAI
-
-embed = SentenceTransformer(<span class="c-str">"all-MiniLM-L6-v2"</span>)   <span class="c-com"># local, gratis, en CPU</span>
-chunks = RecursiveCharacterTextSplitter(chunk_size=<span class="c-num">500</span>, chunk_overlap=<span class="c-num">50</span>).split_text(texto)
-
-col = chromadb.Client().create_collection(<span class="c-str">"docs"</span>)
-col.add(documents=chunks,
-        embeddings=[embed.encode(c).tolist() <span class="c-key">for</span> c <span class="c-key">in</span> chunks],
-        ids=[<span class="c-str">f"c{i}"</span> <span class="c-key">for</span> i <span class="c-key">in</span> range(len(chunks))])
-
-<span class="c-com"># consulta</span>
-res = col.query(query_embeddings=[embed.encode(pregunta).tolist()], n_results=<span class="c-num">3</span>)
-contexto = <span class="c-str">"\n\n"</span>.join(res[<span class="c-str">"documents"</span>][<span class="c-num">0</span>])
-prompt = <span class="c-str">f"Usa SOLO este contexto. Si no esta, di No-lo-se.\n\n{contexto}\n\nPregunta: {pregunta}"</span>
-OpenAI().chat.completions.create(model=<span class="c-str">"gpt-4o-mini"</span>,
-    messages=[{<span class="c-str">"role"</span>: <span class="c-str">"user"</span>, <span class="c-str">"content"</span>: prompt}])</code></pre>
-
-  <h3>¿Dónde guardo los vectores?</h3>
-  <table class="tbl">
-    <tr><th>Vector DB</th><th>Cuándo usarla</th></tr>
-    <tr><td><b>Chroma / FAISS</b></td><td>Local, ideal para aprender y prototipos</td></tr>
-    <tr><td><b>Pinecone / Qdrant / Weaviate</b></td><td>Producción en la nube, escalan a millones</td></tr>
-    <tr><td><b>pgvector</b></td><td>Ya usas PostgreSQL y quieres todo en un sitio</td></tr>
-  </table>
-
-  <div class="note warn">
-    <span class="lbl">Errores típicos</span>
-    <p><b>Chunks mal dimensionados</b> (grandes mezclan temas, pequeños pierden contexto), <b>olvidar el overlap</b>, <b>no instruir "si no está, di no lo sé"</b> (el modelo rellena inventando) y <b>no re-indexar</b> al cambiar los documentos. Si el retrieval falla, el LLM nunca podrá responder bien: mídelo (recall).</p>
-  </div>
-
-  <div class="note tip">
-    <span class="lbl">RAG agéntico</span>
-    <p>En un agente, RAG no es un paso fijo: es <b>una tool más</b>. El modelo decide cuándo buscar, puede reformular la consulta si la primera no basta y elegir entre varias fuentes. Lo desarrollamos en <a href="#rag-agentico">RAG agéntico</a>; conecta directo con <a href="#tools">Tools & function calling</a>.</p>
-  </div>
-
-  <div class="note">
-    <span class="lbl">🗓️ Nota de vigencia</span>
-    <p>Los nombres de modelos (<code>gpt-4o-mini</code>, <code>all-MiniLM-L6-v2</code>) y de las librerías cambian seguido. Antes de copiar el código, verifica el nombre vigente en la documentación del proveedor; para embeddings, consulta el ranking <b>MTEB</b>.</p>
-  </div>
-
-  <div class="quiz" data-correct="2">
-    <div class="qq">❓ ¿Por qué la instrucción "usa SOLO el contexto" reduce las alucinaciones?</div>
-    <button class="opt">Porque hace que el modelo responda más rápido</button>
-    <button class="opt">Porque traduce el contexto a otro idioma</button>
-    <button class="opt">Porque obliga al modelo a responder desde los fragmentos recuperados, no a inventar</button>
-    <div class="fb">✅ Correcto. Anclar la respuesta al contexto recuperado es la forma más simple de reducir invenciones.</div>
-  </div>
-</section>
-
-<!-- 7 FINE-TUNING -->
-<section id="finetuning">
-  <div class="eyebrow"><span class="n">7</span> Conocimiento & adaptación</div>
-  <h2>Fine-tuning — adaptar el comportamiento</h2>
-  <p class="lead">Mientras RAG le da <b>conocimiento</b>, el <b>fine-tuning</b> cambia <em>cómo</em> responde el modelo: su estilo, formato y tono. Se reentrena un modelo ya existente con tus ejemplos hasta que "absorbe" ese comportamiento.</p>
-
-  <div class="grid g2">
-    <div class="card"><div class="ic">✅</div><h4>Úsalo cuando…</h4><p>Quieres un formato muy consistente (siempre JSON), el tono de tu marca, una tarea repetitiva acotada, o que un modelo pequeño imite a uno grande.</p></div>
-    <div class="card"><div class="ic">⛔</div><h4>NO lo uses cuando…</h4><p>Solo quieres "que sepa mis datos" (eso es RAG) o tus datos cambian a menudo (tendrías que reentrenar una y otra vez).</p></div>
-  </div>
-
-  <h3>El ingrediente clave: el dataset</h3>
-  <p>Pares <b>entrada → salida deseada</b> en formato <code>.jsonl</code> (un ejemplo por línea). <b>Calidad &gt; cantidad</b>: 50-100 ejemplos buenos superan a 1000 malos.</p>
-  <pre><code><span class="c-com"># datos.jsonl  (un objeto JSON por linea)</span>
-{<span class="c-key">"messages"</span>: [{<span class="c-key">"role"</span>:<span class="c-str">"user"</span>,<span class="c-key">"content"</span>:<span class="c-str">"Pedido 123 no llego"</span>},
-              {<span class="c-key">"role"</span>:<span class="c-str">"assistant"</span>,<span class="c-key">"content"</span>:<span class="c-str">"Lamento el inconveniente. He localizado..."</span>}]}</code></pre>
-
-  <h3>Dos rutas</h3>
-  <div class="tabs">
-    <div class="tabbtns">
-      <button class="active" data-tab="ft-openai">OpenAI (gestionado)</button>
-      <button data-tab="ft-lora">LoRA (open-source)</button>
-    </div>
-    <div class="tabpane active" id="ft-openai">
-      <p>Subes el <code>.jsonl</code> y ellos entrenan. No ves la máquina ni los pesos; al final usas tu modelo como cualquier otro.</p>
-      <pre><code>client.files.create(file=open(<span class="c-str">"datos.jsonl"</span>,<span class="c-str">"rb"</span>), purpose=<span class="c-str">"fine-tune"</span>)
-client.fine_tuning.jobs.create(training_file=fid, model=<span class="c-str">"gpt-4o-mini-2024-07-18"</span>)
-<span class="c-com"># luego: model = "ft:gpt-4o-mini:org:nombre:id"</span></code></pre>
-    </div>
-    <div class="tabpane" id="ft-lora">
-      <p>Entrenas un modelo abierto (Llama, Mistral) en tu GPU. <b>LoRA</b> entrena menos del 1% de los pesos; <b>QLoRA</b> añade cuantización a 4 bits para que quepa en una GPU de consumo.</p>
-      <pre><code><span class="c-key">from</span> peft <span class="c-key">import</span> LoraConfig
-<span class="c-key">from</span> trl <span class="c-key">import</span> SFTTrainer
-lora = LoraConfig(r=<span class="c-num">16</span>, lora_alpha=<span class="c-num">32</span>, target_modules=[<span class="c-str">"q_proj"</span>,<span class="c-str">"v_proj"</span>])
-SFTTrainer(model=model, train_dataset=datos, peft_config=lora).train()</code></pre>
-    </div>
-  </div>
-
-  <table class="tbl">
-    <tr><th>Concepto</th><th>En una frase</th></tr>
-    <tr><td><b>SFT</b></td><td>Supervised Fine-Tuning: enseñar con pares pregunta→respuesta</td></tr>
-    <tr><td><b>PEFT</b></td><td>Familia de técnicas que entrenan pocos parámetros</td></tr>
-    <tr><td><b>LoRA</b></td><td>El método PEFT más usado: adaptadores pequeños</td></tr>
-    <tr><td><b>QLoRA</b></td><td>LoRA sobre un modelo comprimido a 4 bits</td></tr>
-  </table>
-
-  <div class="note warn">
-    <span class="lbl">Errores típicos</span>
-    <p>Usar fine-tuning para "que sepa mis datos" (es trabajo de RAG), datasets pequeños o sucios, no separar un set de validación (overfitting) y <code>.jsonl</code> malformado. Y recuerda: los nombres de modelos y snapshots cambian seguido — verifica el vigente en la documentación.</p>
-  </div>
-
-  <div class="quiz" data-correct="1">
-    <div class="qq">❓ Tus catálogos cambian cada semana. ¿Qué NO deberías hacer?</div>
-    <button class="opt">Usar RAG sobre el catálogo actualizado</button>
-    <button class="opt">Hacer fine-tuning del catálogo cada semana</button>
-    <button class="opt">Re-indexar la vector DB cuando cambia</button>
-    <div class="fb">✅ Correcto. Para datos que cambian seguido, RAG; reentrenar cada semana es caro e innecesario.</div>
-  </div>
-</section>
-
-<!-- 8 RAG VS FINE-TUNING -->
-<section id="rag-vs-ft">
-  <div class="eyebrow"><span class="n">8</span> Conocimiento & adaptación</div>
-  <h2>RAG vs Fine-tuning — cuándo cada uno</h2>
-  <p>La pregunta que todos hacen. La regla mental: <b>RAG = que SEPA algo</b>; <b>fine-tuning = que se COMPORTE así</b>. Y casi nunca es "o uno u otro".</p>
-
-  <table class="tbl">
-    <tr><th>Criterio</th><th>RAG</th><th>Fine-tuning</th></tr>
-    <tr><td><b>Para qué</b></td><td>Conocimiento, datos frescos</td><td>Comportamiento, estilo, formato</td></tr>
-    <tr><td><b>Datos cambian seguido</b></td><td><span class="tag t-grn">ideal</span> actualizas la DB</td><td><span class="tag t-warn">malo</span> hay que reentrenar</td></tr>
-    <tr><td><b>Costo inicial</b></td><td>Bajo</td><td>Medio-alto</td></tr>
-    <tr><td><b>Trazabilidad</b></td><td><span class="tag t-grn">cita fuentes</span></td><td><span class="tag t-dim">caja negra</span></td></tr>
-    <tr><td><b>Alucinación</b></td><td>Bajo riesgo</td><td>Mayor si el dato no estaba</td></tr>
-  </table>
-
-  <div class="note">
-    <span class="lbl">El orden de la vida real</span>
-    <p>De barato a caro: <b>1) prompt engineering</b> → <b>2) RAG</b> (datos) → <b>3) fine-tuning</b> (comportamiento). Empieza por lo más simple; sube de escalón solo si el anterior se queda corto.</p>
-  </div>
-
-  <div class="stack">
-    <div class="layer l5"><span class="lname">1 · Prompt engineering</span><span class="ldesc">Mejores instrucciones, few-shot, system prompt. Coste casi cero. <b>Pruébalo primero.</b></span></div>
-    <div class="layer l2"><span class="lname">2 · RAG</span><span class="ldesc">Inyecta conocimiento y datos frescos sin reentrenar. La mayoría de casos se resuelven aquí.</span></div>
-    <div class="layer l3"><span class="lname">3 · Fine-tuning</span><span class="ldesc">Cambia el comportamiento base (tono, formato). El escalón más caro: solo si los dos anteriores no bastan.</span></div>
-  </div>
-
-  <h3>Casi siempre se combinan</h3>
-  <p>En un agente real conviven los tres: <b>fine-tuning</b> hornea el tono y el formato de tu marca, <b>RAG</b> inyecta los datos actualizados en cada consulta, y el <b>loop agéntico</b> orquesta cuándo buscar y qué herramientas usar. Personalidad correcta + información correcta + autonomía.</p>
-
-  <div class="note tip">
-    <span class="lbl">Para profundizar</span>
-    <p>Esta sección resume RAG y fine-tuning dentro del contexto agéntico. Para el tutorial visual completo —con quizzes, flashcards, diagramas y un proyecto ejecutable— mira <a href="Tutorial-RAG-FineTuning-Visual.html">Tutorial-RAG-FineTuning-Visual.html</a> y la carpeta <code>chat-pdf-starter/</code>.</p>
-  </div>
-
-  <div class="quiz" data-correct="2">
-    <div class="qq">❓ En un sistema combinado, ¿qué aporta cada técnica?</div>
-    <button class="opt">RAG da el tono; fine-tuning da los datos</button>
-    <button class="opt">Ambas hacen exactamente lo mismo</button>
-    <button class="opt">Fine-tuning da el tono/estilo; RAG da los datos actualizados</button>
-    <div class="fb">✅ Correcto. Fine-tuning hornea el comportamiento; RAG inyecta el conocimiento fresco.</div>
-  </div>
-</section>
-
-<!-- RAG AGENTICO -->
-<section id="rag-agentico">
-  <div class="eyebrow"><span class="n">9</span> Conocimiento & adaptación</div>
-  <h2>RAG agéntico — recuperar mejor</h2>
-  <p class="lead">El RAG de un solo paso (buscar → responder) se queda corto en preguntas complejas. En un agente, el RAG se vuelve <b>dinámico</b>: el modelo decide cuándo buscar, reformula si la primera búsqueda falla y combina varias fuentes. Aquí están las técnicas que separan un RAG de juguete de uno de producción.</p>
-
-  <h3>Mejorar el retrieval</h3>
-  <div class="grid g2">
-    <div class="card"><div class="ic">🥇</div><h4>Re-ranking</h4><p>Recuperas 20 candidatos rápido y un <em>cross-encoder</em> los reordena por relevancia real. La mejora de calidad nº 1 en RAG.</p></div>
-    <div class="card"><div class="ic">🔀</div><h4>Hybrid search</h4><p>Combina búsqueda vectorial (significado) con <em>BM25</em> (palabras clave). Captura tanto sinónimos como términos exactos (códigos, siglas).</p></div>
-    <div class="card"><div class="ic">✏️</div><h4>Query rewriting</h4><p>El modelo reescribe la pregunta antes de buscar (más clara, con sinónimos) o genera varias sub-consultas. Incluye <em>HyDE</em>.</p></div>
-    <div class="card"><div class="ic">🗂️</div><h4>Parent-document</h4><p>Indexas fragmentos pequeños para precisión, pero devuelves el documento padre completo para dar contexto al modelo.</p></div>
-  </div>
-
-  <h3>RAG como herramienta del loop</h3>
-  <p>Cuando expones el retriever como una <a href="#tools">tool</a>, el agente gana capacidades que el RAG fijo no tiene: decidir si buscar, reformular, elegir fuente y razonar en varios pasos.</p>
-  <div class="loop">
-    <div class="node s1"><div class="t">🎯 Pregunta</div><div class="d">objetivo</div></div>
-    <div class="arr">→</div>
-    <div class="node s2"><div class="t">🧠 ¿Buscar?</div><div class="d">el agente decide</div></div>
-    <div class="arr">→</div>
-    <div class="node s3"><div class="t">🔎 retrieve()</div><div class="d">tool de RAG</div></div>
-    <div class="arr">→</div>
-    <div class="node s4"><div class="t">👁️ ¿Suficiente?</div><div class="d">si no, reformula</div></div>
-    <div class="arr">↺</div>
-    <div class="node s2"><div class="t">💬 Responder</div><div class="d">con fuentes</div></div>
-  </div>
-
-  <table class="tbl">
-    <tr><th>Técnica</th><th>Resuelve</th><th>Coste</th></tr>
-    <tr><td><b>Re-ranking</b></td><td>Chunks relevantes mal ordenados</td><td><span class="tag t-warn">+1 modelo</span></td></tr>
-    <tr><td><b>Hybrid (BM25+vector)</b></td><td>Términos exactos que el vector pierde</td><td><span class="tag t-grn">bajo</span></td></tr>
-    <tr><td><b>Query rewriting / HyDE</b></td><td>Preguntas ambiguas o mal formuladas</td><td><span class="tag t-warn">+1 llamada</span></td></tr>
-    <tr><td><b>Multi-hop / agéntico</b></td><td>Preguntas que requieren varios pasos</td><td><span class="tag t-warn">latencia</span></td></tr>
-  </table>
-
-  <div class="note tip">
-    <span class="lbl">Memoria del agente</span>
-    <p>RAG y memoria son primos. Los archivos <code>CLAUDE.md</code> / <code>AGENTS.md</code> son memoria <em>siempre cargada</em>; RAG es memoria <em>recuperada bajo demanda</em>. Un agente maduro combina ambas: reglas estables en el archivo de memoria, y conocimiento extenso y cambiante en una vector DB que consulta cuando lo necesita.</p>
-  </div>
-
-  <div class="note warn">
-    <span class="lbl">El coste de la flexibilidad</span>
-    <p>Un agente hace varias llamadas al LLM por respuesta: es <b>más lento y caro</b> y más difícil de depurar. Usa RAG agéntico cuando el de un solo paso se quede corto, no por defecto. Mídelo (ver <a href="#evaluacion">Evaluación</a>).</p>
-  </div>
-
-  <div class="quiz" data-correct="0">
-    <div class="qq">❓ ¿Cuál se describe como la mejora de calidad nº1 del retrieval?</div>
-    <button class="opt">Re-ranking con un cross-encoder</button>
-    <button class="opt">Recuperar más chunks siempre</button>
-    <button class="opt">Usar un modelo de generación más grande</button>
-    <div class="fb">✅ Correcto. Recuperar muchos candidatos y reordenarlos por relevancia real es el mayor salto de calidad.</div>
-  </div>
-</section>
-
 <!-- 6 MCP -->
 <section id="mcp">
-  <div class="eyebrow"><span class="n">10</span> Protocolos</div>
+  <div class="eyebrow"><span class="n">6</span> Protocolos</div>
   <h2>MCP — Model Context Protocol</h2>
   <p class="lead">MCP es un <b>estándar abierto</b> (creado por Anthropic, hoy adoptado por OpenAI, Google y la mayoría de herramientas) para conectar agentes con herramientas y datos externos. Su analogía habitual: <em>"el USB-C de la IA"</em> — un único conector estándar en vez de una integración a medida por cada app.</p>
 
@@ -764,7 +444,7 @@ mcp.<span class="c-fn">run</span>()  <span class="c-com"># expone la tool por st
 
 <!-- 7 SKILLS -->
 <section id="skills">
-  <div class="eyebrow"><span class="n">11</span> Protocolos</div>
+  <div class="eyebrow"><span class="n">7</span> Protocolos</div>
   <h2>Skills (Agent Skills)</h2>
   <p class="lead">Una <b>Skill</b> es una carpeta con instrucciones, scripts y recursos que enseña a un agente a hacer una tarea especializada. Si MCP da <em>herramientas nuevas</em>, una Skill da <em>conocimiento y procedimiento</em>: "cómo crear un PowerPoint con nuestra plantilla", "cómo revisar un PR según nuestras reglas".</p>
 
@@ -806,7 +486,7 @@ mcp.<span class="c-fn">run</span>()  <span class="c-com"># expone la tool por st
 
 <!-- 8 SUBAGENTES -->
 <section id="subagentes">
-  <div class="eyebrow"><span class="n">12</span> Protocolos</div>
+  <div class="eyebrow"><span class="n">8</span> Protocolos</div>
   <h2>Subagentes & sistemas multi-agente</h2>
   <p class="lead">Un <b>subagente</b> es un agente que otro agente invoca como si fuera una herramienta. El agente principal (orquestador) delega una sub-tarea a un subagente con su <em>propia ventana de contexto limpia</em>, recibe solo el resultado final, y sigue. Es la táctica <em>isolate</em> del context engineering llevada a su extremo.</p>
 
@@ -851,7 +531,7 @@ plan = <span class="c-fn">orquestador</span>.<span class="c-fn">sintetizar</span
 
 <!-- 9 CLAUDE CODE -->
 <section id="claudecode">
-  <div class="eyebrow"><span class="n">13</span> Herramientas</div>
+  <div class="eyebrow"><span class="n">9</span> Herramientas</div>
   <h2>Claude Code</h2>
   <p>Agente de codificación de Anthropic que vive en la terminal (también con extensiones de IDE y SDK). Es un agente "puro": un bucle con acceso a tu sistema de archivos, bash, web y MCP, diseñado para tareas de ingeniería de software de principio a fin.</p>
 
@@ -874,7 +554,7 @@ plan = <span class="c-fn">orquestador</span>.<span class="c-fn">sintetizar</span
 
 <!-- 10 CODEX -->
 <section id="codex">
-  <div class="eyebrow"><span class="n">14</span> Herramientas</div>
+  <div class="eyebrow"><span class="n">10</span> Herramientas</div>
   <h2>Codex (OpenAI)</h2>
   <p>El sistema de agentes de codificación de OpenAI, en 2026 unificado sobre GPT-5.5 / GPT-5.5 Pro, con superficies de terminal (CLI), IDE, web y nube que comparten un mismo modelo de ejecución. Diseñado para correr tareas largas de forma autónoma.</p>
 
@@ -893,7 +573,7 @@ plan = <span class="c-fn">orquestador</span>.<span class="c-fn">sintetizar</span
 
 <!-- 11 OPENCODE -->
 <section id="opencode">
-  <div class="eyebrow"><span class="n">15</span> Herramientas</div>
+  <div class="eyebrow"><span class="n">11</span> Herramientas</div>
   <h2>OpenCode</h2>
   <p>Agente de codificación <b>open source</b> nacido para la terminal, también con app de escritorio y extensión de IDE. Su rasgo distintivo: es <em>agnóstico del modelo</em> — funciona con 75+ modelos (Claude, OpenAI, Gemini, locales) y puede correr el bucle agéntico <b>100% local</b> con Ollama o LM Studio.</p>
 
@@ -912,7 +592,7 @@ plan = <span class="c-fn">orquestador</span>.<span class="c-fn">sintetizar</span
 
 <!-- 12 COMPARATIVA -->
 <section id="comparativa">
-  <div class="eyebrow"><span class="n">16</span> Herramientas</div>
+  <div class="eyebrow"><span class="n">12</span> Herramientas</div>
   <h2>Comparativa</h2>
   <p>Las tres comparten el mismo ADN agéntico (bucle + tools + MCP + skills). Difieren en modelo, apertura y filosofía.</p>
 
@@ -938,7 +618,7 @@ plan = <span class="c-fn">orquestador</span>.<span class="c-fn">sintetizar</span
 
 <!-- 13 PATRONES -->
 <section id="patrones">
-  <div class="eyebrow"><span class="n">17</span> Práctica</div>
+  <div class="eyebrow"><span class="n">13</span> Práctica</div>
   <h2>Patrones agénticos</h2>
   <p>Cuatro patrones de diseño cubren la mayoría de los agentes efectivos. Se combinan entre sí.</p>
 
@@ -967,49 +647,8 @@ plan = <span class="c-fn">orquestador</span>.<span class="c-fn">sintetizar</span
 </section>
 
 <!-- 14 GLOSARIO -->
-<!-- EVALUACION -->
-<section id="evaluacion">
-  <div class="eyebrow"><span class="n">18</span> Práctica</div>
-  <h2>Evaluación — ¿funciona de verdad?</h2>
-  <p class="lead">El error nº 1 es montar un agente con RAG, ver que "más o menos responde" y darlo por terminado. Sin medir, no sabes si una mejora ayuda o empeora. Hay que evaluar las dos mitades: la recuperación y la generación.</p>
-
-  <div class="grid g2">
-    <div class="card"><div class="ic">🔎</div><h4>Retrieval</h4><p><b>¿Trae los chunks correctos?</b> Métrica: <em>Recall@k</em> — ¿está el fragmento correcto entre los k recuperados? Si el retrieval falla, el LLM nunca podrá responder bien.</p></div>
-    <div class="card"><div class="ic">✍️</div><h4>Generación</h4><p><b>¿La respuesta es correcta?</b> <em>Fidelidad</em> (¿se apoya en el contexto o inventa?) y <em>relevancia</em> (¿responde lo que se preguntó?).</p></div>
-  </div>
-
-  <h3>Cómo medirlo en la práctica</h3>
-  <ul class="clean">
-    <li><b>Golden set</b> — 20-50 preguntas reales con su respuesta esperada. Lo ejecutas en cada cambio para detectar regresiones.</li>
-    <li><b>LLM-as-judge</b> — usar un modelo para puntuar fidelidad y relevancia a escala. Frameworks: <b>RAGAS</b>, <b>LangSmith</b>.</li>
-    <li><b>Trazas</b> — registrar qué se recuperó y qué generó el agente, para depurar dónde falló la cadena.</li>
-  </ul>
-
-  <h3>Problemas comunes → solución</h3>
-  <table class="tbl">
-    <tr><th>Síntoma</th><th>Causa probable</th><th>Solución</th></tr>
-    <tr><td>Responde "no lo sé" de más</td><td>Chunks mal recuperados</td><td>Sube k, mejora el chunking, prueba re-ranking</td></tr>
-    <tr><td>Inventa datos (alucina)</td><td>Contexto pobre o prompt débil</td><td>Refuerza "usa SOLO el contexto"</td></tr>
-    <tr><td>Lento / caro</td><td>Prompt o nº de pasos excesivo</td><td>Menos chunks, modelo más pequeño, límite de pasos</td></tr>
-    <tr><td>El fine-tune no mejora</td><td>Pocos datos o sin validación</td><td>Más ejemplos limpios, separar set de validación</td></tr>
-  </table>
-
-  <div class="note tip">
-    <span class="lbl">Evaluar un fine-tune</span>
-    <p>Separa siempre <b>entrenamiento</b> y <b>validación</b>, y compara el modelo afinado contra el base con las mismas preguntas (antes/después). Si no mejora medible, no lo despliegues.</p>
-  </div>
-
-  <div class="quiz" data-correct="1">
-    <div class="qq">❓ Si el retrieval no trae el chunk correcto, ¿qué ocurre?</div>
-    <button class="opt">El LLM lo arregla solo</button>
-    <button class="opt">El LLM no podrá responder bien aunque sea muy bueno</button>
-    <button class="opt">No afecta al resultado</button>
-    <div class="fb">✅ Correcto. Sin el fragmento adecuado en el contexto, la generación no tiene de dónde sacar la respuesta.</div>
-  </div>
-</section>
-
 <section id="glosario">
-  <div class="eyebrow"><span class="n">19</span> Referencia</div>
+  <div class="eyebrow"><span class="n">14</span> Referencia</div>
   <h2>Glosario rápido</h2>
   <table class="tbl">
     <tr><th>Término</th><th>Definición</th></tr>
@@ -1032,18 +671,12 @@ plan = <span class="c-fn">orquestador</span>.<span class="c-fn">sintetizar</span
     <tr><td><b>CLAUDE.md / AGENTS.md</b></td><td>Archivo de memoria de proyecto cargado al inicio del agente.</td></tr>
     <tr><td><b>Hook</b></td><td>Script disparado por un evento del agente (pre-edit, post-run).</td></tr>
     <tr><td><b>RAG / retrieval</b></td><td>Traer fragmentos relevantes a la ventana justo cuando se necesitan.</td></tr>
-    <tr><td><b>Embedding</b></td><td>Texto convertido en un vector numérico que representa su significado.</td></tr>
-    <tr><td><b>Vector DB</b></td><td>Base de datos que busca por similitud de vectores (Chroma, FAISS, pgvector).</td></tr>
-    <tr><td><b>Chunking</b></td><td>Trocear documentos en fragmentos con solapamiento para indexarlos.</td></tr>
-    <tr><td><b>Fine-tuning</b></td><td>Reentrenar un modelo con tus ejemplos para cambiar cómo responde.</td></tr>
-    <tr><td><b>LoRA / QLoRA</b></td><td>Fine-tuning eficiente: entrena pocos parámetros (QLoRA, en 4 bits).</td></tr>
     <tr><td><b>Reflection</b></td><td>Patrón donde el agente revisa y corrige su propio output.</td></tr>
   </table>
 </section>
 
 <div class="foot">
   <p><b>IA Agéntica — Guía Interactiva</b> · Fundamentos del trabajo agéntico, subagéntico y de IA.</p>
-  <p style="margin-top:8px">Material relacionado: <a href="Tutorial-RAG-FineTuning-Visual.html">Tutorial visual de RAG &amp; Fine-tuning</a> · <a href="GUIA_RAG_Y_FINETUNING_DESDE_CERO.md">Guía en texto</a> · <a href="chat-pdf-starter/">Starter "chat con PDFs"</a>.</p>
   <p style="margin-top:8px">Fuentes consultadas (datos 2026 de herramientas): documentación de OpenAI Codex, OpenCode y reportes de la industria. Los conceptos de loop agéntico, MCP, Skills y context engineering se basan en estándares públicos del ecosistema.</p>
 </div>
 </main>
@@ -1084,57 +717,6 @@ document.querySelectorAll('.toggle').forEach(t=>{
     const body=document.getElementById(t.dataset.t);
     t.classList.toggle('open'); body.classList.toggle('open');
   });
-});
-
-// theme
-const root=document.documentElement, themeBtn=document.getElementById('themeBtn');
-function setTheme(t){
-  if(t==='light')root.setAttribute('data-theme','light'); else root.removeAttribute('data-theme');
-  themeBtn.textContent=(t==='light'?'☀️ Tema':'🌙 Tema');
-  try{localStorage.setItem('ia_theme',t)}catch(e){}
-}
-themeBtn.addEventListener('click',()=>setTheme(root.getAttribute('data-theme')==='light'?'dark':'light'));
-let savedTheme='dark'; try{savedTheme=localStorage.getItem('ia_theme')||'dark'}catch(e){}
-setTheme(savedTheme);
-
-// pdf / print
-document.getElementById('pdfBtn').addEventListener('click',()=>window.print());
-
-// search
-const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-const idx=[];
-document.querySelectorAll('section[id]').forEach(se=>{
-  const h=se.querySelector('h2'); if(!h) return;
-  const grp=(se.querySelector('.eyebrow')?.textContent||'').replace(/^\s*\d+\s*/,'').trim();
-  idx.push({id:se.id,title:h.textContent.trim(),sub:grp||'Sección'});
-});
-document.querySelectorAll('#glosario td:first-child b').forEach(b=>{
-  idx.push({id:'glosario',title:b.textContent.trim(),sub:'Glosario'});
-});
-const qInput=document.getElementById('q'), qres=document.getElementById('qres');
-function runQ(){
-  const v=norm(qInput.value.trim());
-  if(v.length<2){qres.classList.remove('show');qres.innerHTML='';return;}
-  const hits=idx.filter(r=>norm(r.title).includes(v)||norm(r.sub).includes(v)).slice(0,12);
-  if(!hits.length){qres.innerHTML='<div class="none">Sin resultados</div>';qres.classList.add('show');return;}
-  qres.innerHTML=hits.map(r=>`<a href="#${r.id}"><b>${r.title}</b> · ${r.sub}</a>`).join('');
-  qres.classList.add('show');
-}
-qInput.addEventListener('input',runQ);
-qres.addEventListener('click',e=>{if(e.target.closest('a')){qres.classList.remove('show');qInput.value='';}});
-document.addEventListener('click',e=>{if(!e.target.closest('.navctl'))qres.classList.remove('show');});
-
-// quizzes
-document.querySelectorAll('.quiz').forEach(q=>{
-  const correct=+q.dataset.correct, fb=q.querySelector('.fb');
-  const opts=[...q.querySelectorAll('.opt')];
-  opts.forEach((o,i)=>o.addEventListener('click',()=>{
-    if(q.dataset.done)return; q.dataset.done='1';
-    opts.forEach(b=>b.disabled=true);
-    opts[correct].classList.add('correct');
-    if(i!==correct)o.classList.add('wrong');
-    if(fb)fb.classList.add('show');
-  }));
 });
 </script>
 </body>

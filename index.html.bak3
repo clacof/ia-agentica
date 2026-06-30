@@ -518,14 +518,6 @@ OpenAI().chat.completions.create(model=<span class="c-str">"gpt-4o-mini"</span>,
     <span class="lbl">🗓️ Nota de vigencia</span>
     <p>Los nombres de modelos (<code>gpt-4o-mini</code>, <code>all-MiniLM-L6-v2</code>) y de las librerías cambian seguido. Antes de copiar el código, verifica el nombre vigente en la documentación del proveedor; para embeddings, consulta el ranking <b>MTEB</b>.</p>
   </div>
-
-  <div class="quiz" data-correct="2">
-    <div class="qq">❓ ¿Por qué la instrucción "usa SOLO el contexto" reduce las alucinaciones?</div>
-    <button class="opt">Porque hace que el modelo responda más rápido</button>
-    <button class="opt">Porque traduce el contexto a otro idioma</button>
-    <button class="opt">Porque obliga al modelo a responder desde los fragmentos recuperados, no a inventar</button>
-    <div class="fb">✅ Correcto. Anclar la respuesta al contexto recuperado es la forma más simple de reducir invenciones.</div>
-  </div>
 </section>
 
 <!-- 7 FINE-TUNING -->
@@ -578,14 +570,6 @@ SFTTrainer(model=model, train_dataset=datos, peft_config=lora).train()</code></p
     <span class="lbl">Errores típicos</span>
     <p>Usar fine-tuning para "que sepa mis datos" (es trabajo de RAG), datasets pequeños o sucios, no separar un set de validación (overfitting) y <code>.jsonl</code> malformado. Y recuerda: los nombres de modelos y snapshots cambian seguido — verifica el vigente en la documentación.</p>
   </div>
-
-  <div class="quiz" data-correct="1">
-    <div class="qq">❓ Tus catálogos cambian cada semana. ¿Qué NO deberías hacer?</div>
-    <button class="opt">Usar RAG sobre el catálogo actualizado</button>
-    <button class="opt">Hacer fine-tuning del catálogo cada semana</button>
-    <button class="opt">Re-indexar la vector DB cuando cambia</button>
-    <div class="fb">✅ Correcto. Para datos que cambian seguido, RAG; reentrenar cada semana es caro e innecesario.</div>
-  </div>
 </section>
 
 <!-- 8 RAG VS FINE-TUNING -->
@@ -620,14 +604,6 @@ SFTTrainer(model=model, train_dataset=datos, peft_config=lora).train()</code></p
   <div class="note tip">
     <span class="lbl">Para profundizar</span>
     <p>Esta sección resume RAG y fine-tuning dentro del contexto agéntico. Para el tutorial visual completo —con quizzes, flashcards, diagramas y un proyecto ejecutable— mira <a href="Tutorial-RAG-FineTuning-Visual.html">Tutorial-RAG-FineTuning-Visual.html</a> y la carpeta <code>chat-pdf-starter/</code>.</p>
-  </div>
-
-  <div class="quiz" data-correct="2">
-    <div class="qq">❓ En un sistema combinado, ¿qué aporta cada técnica?</div>
-    <button class="opt">RAG da el tono; fine-tuning da los datos</button>
-    <button class="opt">Ambas hacen exactamente lo mismo</button>
-    <button class="opt">Fine-tuning da el tono/estilo; RAG da los datos actualizados</button>
-    <div class="fb">✅ Correcto. Fine-tuning hornea el comportamiento; RAG inyecta el conocimiento fresco.</div>
   </div>
 </section>
 
@@ -675,14 +651,6 @@ SFTTrainer(model=model, train_dataset=datos, peft_config=lora).train()</code></p
   <div class="note warn">
     <span class="lbl">El coste de la flexibilidad</span>
     <p>Un agente hace varias llamadas al LLM por respuesta: es <b>más lento y caro</b> y más difícil de depurar. Usa RAG agéntico cuando el de un solo paso se quede corto, no por defecto. Mídelo (ver <a href="#evaluacion">Evaluación</a>).</p>
-  </div>
-
-  <div class="quiz" data-correct="0">
-    <div class="qq">❓ ¿Cuál se describe como la mejora de calidad nº1 del retrieval?</div>
-    <button class="opt">Re-ranking con un cross-encoder</button>
-    <button class="opt">Recuperar más chunks siempre</button>
-    <button class="opt">Usar un modelo de generación más grande</button>
-    <div class="fb">✅ Correcto. Recuperar muchos candidatos y reordenarlos por relevancia real es el mayor salto de calidad.</div>
   </div>
 </section>
 
@@ -998,14 +966,6 @@ plan = <span class="c-fn">orquestador</span>.<span class="c-fn">sintetizar</span
     <span class="lbl">Evaluar un fine-tune</span>
     <p>Separa siempre <b>entrenamiento</b> y <b>validación</b>, y compara el modelo afinado contra el base con las mismas preguntas (antes/después). Si no mejora medible, no lo despliegues.</p>
   </div>
-
-  <div class="quiz" data-correct="1">
-    <div class="qq">❓ Si el retrieval no trae el chunk correcto, ¿qué ocurre?</div>
-    <button class="opt">El LLM lo arregla solo</button>
-    <button class="opt">El LLM no podrá responder bien aunque sea muy bueno</button>
-    <button class="opt">No afecta al resultado</button>
-    <div class="fb">✅ Correcto. Sin el fragmento adecuado en el contexto, la generación no tiene de dónde sacar la respuesta.</div>
-  </div>
 </section>
 
 <section id="glosario">
@@ -1101,7 +1061,7 @@ setTheme(savedTheme);
 document.getElementById('pdfBtn').addEventListener('click',()=>window.print());
 
 // search
-const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const norm=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
 const idx=[];
 document.querySelectorAll('section[id]').forEach(se=>{
   const h=se.querySelector('h2'); if(!h) return;

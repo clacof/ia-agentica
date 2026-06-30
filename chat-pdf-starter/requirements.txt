@@ -1,0 +1,9 @@
+# Starter RAG · chat con PDFs
+# Versiones fijadas y probadas juntas (junio 2026).
+# Si una falla, prueba a relajar la versión con: pip install -U <paquete>
+
+pypdf==4.2.0
+chromadb==0.5.0
+sentence-transformers==3.0.1
+langchain-text-splitters==0.2.2
+openai==1.40.0
